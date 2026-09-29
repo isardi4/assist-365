@@ -1,0 +1,62 @@
+[
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "description": "Momento UTC en que este registro fue persistido en la zona raw de BigQuery, útil para particionar consultas y reconstruir el orden de llegada. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "run_id",
+    "type": "STRING",
+    "description": "Identificador estable de la ejecución que obtuvo o procesó este dato, usado para enlazarlo con métricas, errores y controles de reconciliación. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "batch_id",
+    "type": "STRING",
+    "description": "Identificador del lote lógico de extracción al que pertenece el registro, conservado para localizar y reprocesar subconjuntos de una corrida. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "resource",
+    "type": "STRING",
+    "description": "Nombre del recurso o endpoint de origen al que corresponde el dato, utilizado para separar flujos y aplicar controles específicos por entidad. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "snapshot_id",
+    "type": "STRING",
+    "description": "Identificador de la captura completa o parcial de origen que incluyó este registro, necesario para comparar estados observados en distintos momentos. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "page_number",
+    "type": "INT64",
+    "description": "Número de página informado o procesado durante la paginación de la API, útil para ubicar fallas y validar continuidad de la extracción. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "record_index",
+    "type": "INT64",
+    "description": "Posición del registro dentro de la página o unidad de respuesta almacenada, que permite ubicarlo cuando la fuente no provee una clave válida. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "source_key",
+    "type": "STRING",
+    "description": "Clave de negocio extraída de la fuente cuando está disponible; permite identificar registros y comparar cambios sin descartar el payload original. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "source_updated_at",
+    "type": "TIMESTAMP",
+    "description": "Fecha y hora de última actualización declarada por el origen, si existe; se conserva para incrementalidad y análisis de cambios tardíos. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "record_hash",
+    "type": "STRING",
+    "description": "Hash determinístico del contenido normalizado del registro, empleado para detectar cambios evitando comparar repetidamente todo el payload. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "source_file",
+    "type": "STRING",
+    "description": "Ruta o nombre del archivo local de origen que contiene el dato, preservado como evidencia y referencia para reprocesos reproducibles. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "payload",
+    "type": "JSON",
+    "description": "Objeto JSON con el contenido completo recibido de la fuente, conservado sin proyección para permitir análisis futuro de campos hoy desconocidos. En la tabla records, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  }
+]

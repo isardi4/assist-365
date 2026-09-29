@@ -1,0 +1,14 @@
+# Exercise materials and local credentials contain access secrets.
+/EJERCICIO.md
+/.env
+/.env.*
+
+# Local API extracts, manifests, error ledgers, and temporary files.
+/.local_data/
+/data/
+
+# Python local environment/cache.
+/.venv/
+__pycache__/
+*.py[cod]
+.DS_Store

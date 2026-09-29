@@ -1,0 +1,62 @@
+[
+  {
+    "name": "created_at",
+    "type": "TIMESTAMP",
+    "description": "Fecha y hora UTC en que se registró la falla en el sistema, usada para particionado temporal y seguimiento de su antigüedad. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "run_id",
+    "type": "STRING",
+    "description": "Identificador estable de la ejecución que obtuvo o procesó este dato, usado para enlazarlo con métricas, errores y controles de reconciliación. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "resource",
+    "type": "STRING",
+    "description": "Nombre del recurso o endpoint de origen al que corresponde el dato, utilizado para separar flujos y aplicar controles específicos por entidad. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "batch_id",
+    "type": "STRING",
+    "description": "Identificador del lote lógico de extracción al que pertenece el registro, conservado para localizar y reprocesar subconjuntos de una corrida. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "page_number",
+    "type": "INT64",
+    "description": "Número de página informado o procesado durante la paginación de la API, útil para ubicar fallas y validar continuidad de la extracción. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "record_index",
+    "type": "INT64",
+    "description": "Posición del registro dentro de la página o unidad de respuesta almacenada, que permite ubicarlo cuando la fuente no provee una clave válida. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "source_key",
+    "type": "STRING",
+    "description": "Clave de negocio extraída de la fuente cuando está disponible; permite identificar registros y comparar cambios sin descartar el payload original. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "error_class",
+    "type": "STRING",
+    "description": "Categoría técnica normalizada de la falla, útil para agrupar causas y distinguir problemas de datos, transporte o lógica de procesamiento. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "message",
+    "type": "STRING",
+    "description": "Descripción legible del error con contexto suficiente para diagnosticarlo; debe evitar incluir secretos o credenciales de conexión. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "fingerprint_sha256",
+    "type": "STRING",
+    "description": "Huella estable calculada a partir de los atributos relevantes del error, útil para agrupar ocurrencias repetidas sin perder sus eventos. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "source_file",
+    "type": "STRING",
+    "description": "Ruta o nombre del archivo local de origen que contiene el dato, preservado como evidencia y referencia para reprocesos reproducibles. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  },
+  {
+    "name": "resolution_status",
+    "type": "STRING",
+    "description": "Estado del flujo de investigación de la falla, por ejemplo pendiente, investigando, resuelta o aceptada con justificación documentada. En la tabla ingestion_errors, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+  }
+]
