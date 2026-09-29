@@ -58,7 +58,7 @@ Para evitar descargar a diario las ~278 páginas actuales y detectar cambios con
 
 Hasta que el origen ofrezca un delta confiable, la alternativa observable es comparar snapshots completos por `claim_id` y hash. Las altas/cambios se pueden detectar al comparar; una fila ausente solo será candidata a baja después de conciliar el snapshot y descartar errores de paginación. El raw conservará cada snapshot para auditoría. Esto representa hoy unas 278 llamadas por corrida, no una garantía de que siempre serán necesarias: volveremos a evaluar al inspeccionar todos los registros o si el proveedor confirma campos/filtros adicionales.
 
-Las pólizas sí documentan `updated_since` y operaciones `I/U/D`; allí preservaremos eventos crudos y deduplicaremos solapamientos al construir el estado vigente. Los watermarks solo avanzarán cuando páginas, conteos y cargas hayan conciliado.
+La API de pólizas documenta `updated_since` y operaciones `I/U/D`, pero el extractor actual todavía no los envía ni consume como delta. Cuando se implemente ese modo, preservaremos eventos crudos y deduplicaremos solapamientos al construir el estado vigente. Los watermarks solo avanzarán cuando páginas, conteos y cargas hayan conciliado.
 
 ### ¿Puede darse de baja un siniestro?
 
@@ -88,12 +88,42 @@ La lectura inicial encontró cero datasets y no mostró buckets existentes. Se c
 
 ## Ejecución local
 
-Desde la raíz del repositorio:
+Los ejemplos usan una espera mínima de 2 segundos y hasta 2 reintentos por solicitud. Ejecutalos desde la raíz del repositorio, con el token disponible en `ASSIST365_API_TOKEN` o ingresándolo cuando el CLI lo solicite.
+
+### 1. Primera extracción completa desde cero
 
 ```bash
-python3 -m scripts.parte_01_extraccion.run --max-pages-per-resource 1 --min-interval-seconds 2 --max-retries 2
-python3 -m scripts.parte_01_extraccion.run --full --run-id full-20260929 --min-interval-seconds 2 --max-retries 2
-python3 -m scripts.parte_02_carga_bigquery.prepare_load .local_data/assist365/raw/<run_id>
+RUN_ID="full-$(date -u +%Y%m%dT%H%M%SZ)"
+if [ -e ".local_data/assist365/raw/$RUN_ID" ]; then echo "El run_id ya existe; elegí otro."; exit 1; fi
+python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
 ```
 
-El primer comando hace una extracción acotada. El segundo recorre todas las páginas; si se interrumpe, repetilo con el mismo `--run-id` para reanudar desde el checkpoint. Los recursos que ya estén completos se omiten. Para una captura nueva, usá otro ID. Sin opciones, el extractor procesa solo una página por recurso, espera 1 segundo y permite hasta 6 reintentos por solicitud. El token se lee desde `ASSIST365_API_TOKEN` o se solicita sin mostrarlo en pantalla. El run local `smoke-20260929` ya está completo; sus archivos se pueden preparar sin volver a llamar la API. La carga de datos a BigQuery requiere una etapa posterior.
+Este ID nuevo permite empezar desde la primera página de cada recurso. Guardá su valor o la ruta de la corrida (`.local_data/assist365/raw/$RUN_ID`): lo vas a necesitar si hay que reanudar.
+
+### 2. Reanudar una extracción interrumpida
+
+Repetí el comando de la corrida interrumpida con **el mismo `--run-id`**:
+
+```bash
+RUN_ID="full-20260930T090000Z"  # Reemplazar por el ID de la corrida interrumpida.
+python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
+```
+
+El checkpoint está en `.local_data/assist365/raw/<run-id>/manifest.json`. La extracción retoma el cursor de pólizas y el offset de siniestros guardados allí; conserva las páginas ya descargadas y omite recursos que figuren completos. Si ese `run_id` ya terminó con éxito, volver a ejecutarlo no crea una captura nueva ni vuelve a descargar esos recursos.
+
+### 3. Captura diaria nueva
+
+Para ejecutar una corrida nueva al día siguiente, asignale un **`--run-id` nuevo** y usá `--full`:
+
+```bash
+RUN_ID="daily-$(date -u +%Y%m%dT%H%M%SZ)"
+if [ -e ".local_data/assist365/raw/$RUN_ID" ]; then echo "El run_id ya existe; elegí otro."; exit 1; fi
+python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
+python3 -m scripts.parte_02_carga_bigquery.prepare_local ".local_data/assist365/raw/$RUN_ID"
+```
+
+Esto crea un snapshot completo nuevo. **No es lo mismo que reanudar el checkpoint de ayer y hoy no es todavía una extracción delta**: el extractor actual no envía `updated_since` ni consume operaciones `I/U/D`, así que vuelve a pedir todos los datos disponibles (incluidas las 278 páginas actuales de siniestros). Para una nueva captura del mismo día, elegí otro ID único.
+
+La carga actual de BigQuery agrega los registros a raw con el `run_id`/`snapshot_id`; no aplica todavía ABM ni reemplaza el estado previo. `source_key` y `record_hash` quedan disponibles para comparar snapshots. El ABM debe implementarse después en staging/modelo: para pólizas, una vez que el extractor use el delta documentado por la API; para siniestros, comparando snapshots completos hasta que el proveedor ofrezca un filtro de cambios. Una ausencia de siniestro en un snapshot no se debe tratar automáticamente como baja.
+
+El comando sin opciones tiene valores por defecto distintos: una página por recurso, espera de 1 segundo y hasta 6 reintentos por solicitud. No lo uses para una extracción completa o diaria sin especificar las opciones anteriores.
