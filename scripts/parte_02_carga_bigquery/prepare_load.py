@@ -6,6 +6,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import math
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -28,6 +29,23 @@ def canonical_json(value: Any) -> str:
     """Serialize a JSON value deterministically for stable row fingerprints."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
                       allow_nan=False)
+
+
+def encode_non_finite(value: Any, path: str = "$", issues: list[dict[str, str]] | None = None) -> Any:
+    """Replace non-finite numbers with explicit JSON markers and record their paths."""
+    if issues is None:
+        issues = []
+    if isinstance(value, float) and not math.isfinite(value):
+        marker = "NaN" if math.isnan(value) else ("Infinity" if value > 0 else "-Infinity")
+        issues.append({"path": path, "value": marker})
+        return {"__non_finite_number__": marker}
+    if isinstance(value, dict):
+        return {key: encode_non_finite(item, f"{path}.{key}", issues)
+                for key, item in value.items()}
+    if isinstance(value, list):
+        return [encode_non_finite(item, f"{path}[{index}]", issues)
+                for index, item in enumerate(value)]
+    return value
 
 
 def source_key(resource: str, row: Any) -> str | None:
@@ -71,6 +89,7 @@ def write_resource(
     count = 0
     digest = hashlib.sha256()
     page_checks: list[dict[str, Any]] = []
+    data_quality_errors: list[dict[str, Any]] = []
     try:
         with os.fdopen(fd, "wb") as raw_output:
             with gzip.GzipFile(fileobj=raw_output, mode="wb", mtime=0) as compressed:
@@ -90,7 +109,30 @@ def write_resource(
                         raise ExtractionError(f"El conteo de la página no coincide: {raw_path}")
                     page_number = page_info["page_number"]
                     for index, row in enumerate(rows):
-                        payload_text = canonical_json(row)
+                        issues: list[dict[str, str]] = []
+                        encoded_row = encode_non_finite(row, issues=issues)
+                        source_fingerprint = hashlib.sha256(
+                            json.dumps(row, ensure_ascii=False, sort_keys=True,
+                                       separators=(",", ":"), allow_nan=True).encode("utf-8")
+                        ).hexdigest()
+                        for issue in issues:
+                            data_quality_errors.append({
+                                "created_at": page_info.get("saved_at") or utc_now(),
+                                "run_id": run_id,
+                                "resource": resource,
+                                "batch_id": f"{run_id}:{resource}:{page_number}",
+                                "page_number": page_number,
+                                "record_index": index,
+                                "source_key": source_key(resource, row),
+                                "error_class": "NonFiniteJSONNumber",
+                                "message": (
+                                    f"Valor numérico {issue['value']} codificado con marcador "
+                                    f"JSON explícito en {issue['path']}; revisar semántica de origen."
+                                ),
+                                "fingerprint_sha256": source_fingerprint,
+                                "source_file": page_info["raw_file"],
+                                "resolution_status": "preserved_with_marker",
+                            })
                         record = {
                             "ingested_at": page_info.get("saved_at") or utc_now(),
                             "run_id": run_id,
@@ -103,9 +145,9 @@ def write_resource(
                             "source_updated_at": normalized_timestamp(
                                 row.get("updated_at") if isinstance(row, dict) else None
                             ),
-                            "record_hash": sha256(payload_text.encode("utf-8")),
+                            "record_hash": source_fingerprint,
                             "source_file": page_info["raw_file"],
-                            "payload": row,
+                            "payload": encoded_row,
                         }
                         line = (canonical_json(record) + "\n").encode("utf-8")
                         compressed.write(line)
@@ -133,13 +175,17 @@ def write_resource(
         "compressed_bytes": compressed_bytes,
         "compressed_sha256": compressed_sha256,
         "pages": page_checks,
+        "data_quality_errors": data_quality_errors,
     }
 
 
-def write_error_ledger(run_dir: Path, output_dir: Path, run_id: str) -> dict[str, Any] | None:
+def write_error_ledger(
+    run_dir: Path, output_dir: Path, run_id: str,
+    data_quality_errors: list[dict[str, Any]],
+) -> dict[str, Any] | None:
     """Convert the local structured error ledger into a BigQuery load file."""
     source = run_dir / "errors.jsonl"
-    if not source.is_file() or source.stat().st_size == 0:
+    if (not source.is_file() or source.stat().st_size == 0) and not data_quality_errors:
         return None
     destination = output_dir / "errors.ndjson.gz"
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -149,30 +195,34 @@ def write_error_ledger(run_dir: Path, output_dir: Path, run_id: str) -> dict[str
     try:
         with os.fdopen(fd, "wb") as raw_output:
             with gzip.GzipFile(fileobj=raw_output, mode="wb", mtime=0) as compressed:
-                with source.open("rt", encoding="utf-8") as ledger:
-                    for line_number, source_line in enumerate(ledger, 1):
-                        try:
-                            error = json.loads(source_line)
-                        except json.JSONDecodeError:
-                            raise ExtractionError(
-                                f"Ledger de errores inválido en línea {line_number}."
-                            ) from None
-                        record = {
-                            "created_at": error.get("timestamp"),
-                            "run_id": error.get("run_id", run_id),
-                            "resource": error.get("resource"),
-                            "batch_id": None,
-                            "page_number": error.get("page_number"),
-                            "record_index": error.get("record_index"),
-                            "source_key": error.get("source_key"),
-                            "error_class": error.get("error_class", "unspecified"),
-                            "message": error.get("message"),
-                            "fingerprint_sha256": error.get("fingerprint_sha256"),
-                            "source_file": error.get("raw_file"),
-                            "resolution_status": error.get("resolution_status", "pending"),
-                        }
-                        compressed.write((canonical_json(record) + "\n").encode("utf-8"))
-                        count += 1
+                source_lines = source.read_text(encoding="utf-8").splitlines() \
+                    if source.is_file() else []
+                for line_number, source_line in enumerate(source_lines, 1):
+                    try:
+                        error = json.loads(source_line)
+                    except json.JSONDecodeError:
+                        raise ExtractionError(
+                            f"Ledger de errores inválido en línea {line_number}."
+                        ) from None
+                    record = {
+                        "created_at": error.get("timestamp"),
+                        "run_id": error.get("run_id", run_id),
+                        "resource": error.get("resource"),
+                        "batch_id": None,
+                        "page_number": error.get("page_number"),
+                        "record_index": error.get("record_index"),
+                        "source_key": error.get("source_key"),
+                        "error_class": error.get("error_class", "unspecified"),
+                        "message": error.get("message"),
+                        "fingerprint_sha256": error.get("fingerprint_sha256"),
+                        "source_file": error.get("raw_file"),
+                        "resolution_status": error.get("resolution_status", "pending"),
+                    }
+                    compressed.write((canonical_json(record) + "\n").encode("utf-8"))
+                    count += 1
+                for record in data_quality_errors:
+                    compressed.write((canonical_json(record) + "\n").encode("utf-8"))
+                    count += 1
             raw_output.flush()
             os.fsync(raw_output.fileno())
         os.replace(temporary, destination)
@@ -230,13 +280,20 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
     output_run = output_dir / run_id
     resource_results: list[dict[str, Any]] = []
     reconciliation_rows: list[dict[str, Any]] = []
+    data_quality_errors: list[dict[str, Any]] = []
     for resource, resource_state in manifest.get("resources", {}).items():
         pages = resource_state.get("pages", [])
         load_path = output_run / f"{resource}.ndjson.gz"
         result = write_resource(run_dir, load_path, run_id, resource, pages)
         if result["rows"] != resource_state.get("rows_received", 0):
             raise ExtractionError(f"El total acumulado del manifiesto no coincide para {resource}.")
-        resource_results.append({"resource": resource, **result})
+        resource_errors = result.pop("data_quality_errors")
+        data_quality_errors.extend(resource_errors)
+        resource_results.append({
+            "resource": resource,
+            "data_quality_issue_count": len(resource_errors),
+            **result,
+        })
         reconciliation_rows.append({
             "checked_at": utc_now(),
             "run_id": run_id,
@@ -248,8 +305,31 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
             "difference_count": 0,
             "details": {"pages": len(result["pages"]), "hashes_verified": len(result["pages"])},
         })
-        source_totals = [page.get("source_total") for page in resource_state.get("pages", [])
-                         if isinstance(page.get("source_total"), int)]
+        if resource_errors:
+            reconciliation_rows.append({
+                "checked_at": utc_now(),
+                "run_id": run_id,
+                "resource": resource,
+                "check_name": "non_finite_values_encoded_and_logged",
+                "check_status": "PASS",
+                "expected_count": len(resource_errors),
+                "actual_count": len(resource_errors),
+                "difference_count": 0,
+                "details": {
+                    "rows_dropped": 0,
+                    "marker": '{"__non_finite_number__":"NaN"}',
+                },
+            })
+        source_totals = [
+            total
+            for page in resource_state.get("pages", [])
+            for total in (
+                page.get("source_total"),
+                page.get("meta", {}).get("total")
+                if isinstance(page.get("meta"), dict) else None,
+            )
+            if isinstance(total, int) and not isinstance(total, bool)
+        ]
         if source_totals:
             expected = source_totals[-1]
             actual = result["rows"]
@@ -264,7 +344,7 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
                 "details": {"note": "Total informado por la API"},
             })
 
-    error_file = write_error_ledger(run_dir, output_run, run_id)
+    error_file = write_error_ledger(run_dir, output_run, run_id, data_quality_errors)
     raw_jobs = len([item for item in resource_results if item["rows"] > 0])
     expected_jobs = raw_jobs + 2 + (1 if error_file and error_file["errors"] else 0)
     run_record = {
@@ -293,6 +373,7 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
         "source_manifest": str(manifest_path),
         "rows_prepared": sum(item["rows"] for item in resource_results),
         "pages_prepared": sum(len(item["pages"]) for item in resource_results),
+        "data_quality_issues": len(data_quality_errors),
         "load_jobs_expected": expected_jobs,
         "error_file": error_file,
         "run_file": run_file,
@@ -333,3 +414,7 @@ def main() -> int:
         emit("bigquery_preparation_failed", error_class=type(exc).__name__,
              message=str(exc)[:300])
         return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

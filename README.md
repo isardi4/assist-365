@@ -1,6 +1,6 @@
 # Assist-365 — datos y métricas
 
-> **Estado:** reconocimiento y prueba local acotada completados. La extracción completa, la carga en BigQuery, el modelo y el tablero siguen pendientes.
+> **Estado:** extracción completa guardada y conciliada localmente. La carga de datos en BigQuery, el modelo y el tablero siguen pendientes.
 
 ## Objetivo
 
@@ -10,8 +10,8 @@ Construir un flujo reproducible `API → raw → BigQuery → modelo → Looker 
 
 | Parte | Resultado actual |
 |---|---|
-| 1. Extracción | Extractor local implementado; prueba acotada de 7 GET acumulados y 0 reintentos. Catálogos completos; pólizas y siniestros siguen parciales. |
-| 2. Carga raw | Datasets y tablas raw/control creados en `us-central1`; archivos y carga local preparados. Todavía no se cargaron datos. |
+| 1. Extracción | Completa localmente: cinco recursos, 1.147.859 filas y cero registros en cuarentena. |
+| 2. Carga raw | Datasets y tablas raw/control creados en `us-central1`; 1.285 páginas verificadas y archivos locales listos para carga. Todavía no se cargaron datos. |
 | 3. Modelo | Pendiente de perfilar raw. |
 | 4. Orquestación | Pendiente; primero se validará el flujo local y la carga. |
 | 5. Análisis | Pendiente; no hay métricas de negocio calculadas. |
@@ -37,9 +37,15 @@ Cada parte del ejercicio reúne su código y recursos: la carga usa `scripts/par
 
 ## Hallazgos de datos que condicionan el diseño
 
-La prueba local acumuló 7 GET exitosos y ningún reintento. Se completaron los catálogos: productos 12, agencias 300 y tipos de cambio 5.124. Se guardaron dos páginas de pólizas (2.000 filas) y dos páginas de siniestros (1.000 filas); siniestros informó un total de 138.962, unas 278 páginas de 500 filas. La corrida queda `PARTIAL` intencionalmente. Las muestras no prueban que todas las páginas tengan el mismo esquema.
+La extracción completa `smoke-20260929` terminó en `SUCCESS` y permanece solo en `.local_data/assist365/raw/smoke-20260929/`; todavía no se cargaron datos a BigQuery. Se guardaron 1.003.461 pólizas (1.004 páginas), 138.962 siniestros (278 páginas, coinciden con el total reportado por la API), 300 agencias, 12 productos y 5.124 tipos de cambio. Las 1.147.859 filas quedaron sin registros en cuarentena y las páginas tienen continuidad numérica y archivos presentes. Los campos de primer nivel conservaron su forma y tipo observados entre páginas.
 
-En la documentación y las muestras revisadas, siniestros incluye `occurred_at` y `reported_at`, pero no se observó `created_at`, `updated_at`, una operación `I/U/D` ni un filtro de cambios. `reported_at` describe la fecha del reporte del evento y no debe asumirse como la fecha técnica de creación/modificación del registro. Esta ausencia debe reconfirmarse al perfilar la extracción completa.
+La preparación local verificó los hashes y conteos de las 1.285 páginas y reconcilió 1.147.859 filas; todos los controles finalizaron `PASS`. Detectó 414 valores no finitos `NaN` en `siniestros.amount.currency`. Ningún registro se descartó: en el NDJSON para BigQuery cada valor se codificó con el marcador JSON `{"__non_finite_number__":"NaN"}`, se mantuvo el hash del registro fuente y cada ocurrencia quedó en el ledger `NonFiniteJSONNumber` con ubicación del registro. Los archivos raw originales preservan el token recibido. También figuran cuatro errores transitorios de transporte ya resueltos. Revisaremos con el proveedor qué semántica espera para `amount.currency` antes de diseñar métricas que usen ese campo.
+
+El perfil anidado de siniestros encontró tres formas en `detail`: 83.505 registros con claves en español (`ciudad_atencion`, `diagnostico`, `proveedor`), 41.538 con claves en inglés (`city`, `diagnosis`, `proveedor`) y 13.919 solo con `proveedor`. Entre los registros en español, `diagnostico` es `null` en 20.955 y texto en 62.550; `amount.currency` es texto en 138.548 y `NaN` en 414. El raw preserva estas variantes. Staging deberá perfilar los valores, acordar alias bilingües sin borrar campos fuente y tratar explícitamente los datos ausentes y no finitos antes de calcular métricas.
+
+El manifiesto conserva conteos, tamaños y hashes de respuesta por página; el ledger contiene cuatro errores de transporte previos, todos resueltos al reanudar desde el checkpoint. Los contadores globales de solicitudes/reintentos corresponden a la última invocación que reanudó la corrida, por lo que no se interpretan como acumulados de todo el proceso. La extracción fue espaciada al menos dos segundos entre solicitudes y usó hasta dos reintentos por solicitud.
+
+En todas las páginas extraídas de siniestros se observaron `occurred_at` y `reported_at`, pero no `created_at`, `updated_at`, una operación `I/U/D` ni un filtro de cambios. `reported_at` describe la fecha del reporte del evento y no debe asumirse como la fecha técnica de creación/modificación del registro.
 
 ### Recomendación para mejorar la API de siniestros
 
@@ -87,7 +93,7 @@ Desde la raíz del repositorio:
 ```bash
 python3 -m scripts.parte_01_extraccion.run --max-pages-per-resource 1
 python3 -m scripts.parte_01_extraccion.run --full --run-id initial-20260929
-python3 -m scripts.parte_02_carga_bigquery.prepare_local .local_data/assist365/raw/<run_id>
+python3 -m scripts.parte_02_carga_bigquery.prepare_load .local_data/assist365/raw/<run_id>
 ```
 
-La extracción completa aún no se ejecutó. El token se lee desde `ASSIST365_API_TOKEN` o se solicita sin mostrarlo en pantalla. El run `smoke-20260929` puede continuarse con `--full --run-id smoke-20260929`; los checkpoints evitan repetir páginas ya guardadas.
+El token se lee desde `ASSIST365_API_TOKEN` o se solicita sin mostrarlo en pantalla. El run local `smoke-20260929` ya está completo; sus checkpoints y archivos se conservan para preparar la carga sin volver a llamar la API. La carga de datos a BigQuery requiere una etapa posterior de validación/preparación local.
