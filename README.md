@@ -91,9 +91,9 @@ La lectura inicial encontró cero datasets y no mostró buckets existentes. Se c
 Desde la raíz del repositorio:
 
 ```bash
-python3 -m scripts.parte_01_extraccion.run --max-pages-per-resource 1
-python3 -m scripts.parte_01_extraccion.run --full --run-id initial-20260929
+python3 -m scripts.parte_01_extraccion.run --max-pages-per-resource 1 --min-interval-seconds 2 --max-retries 2
+python3 -m scripts.parte_01_extraccion.run --full --run-id full-20260929 --min-interval-seconds 2 --max-retries 2
 python3 -m scripts.parte_02_carga_bigquery.prepare_load .local_data/assist365/raw/<run_id>
 ```
 
-El token se lee desde `ASSIST365_API_TOKEN` o se solicita sin mostrarlo en pantalla. El run local `smoke-20260929` ya está completo; sus checkpoints y archivos se conservan para preparar la carga sin volver a llamar la API. La carga de datos a BigQuery requiere una etapa posterior de validación/preparación local.
+El primer comando hace una extracción acotada. El segundo recorre todas las páginas; si se interrumpe, repetilo con el mismo `--run-id` para reanudar desde el checkpoint. Los recursos que ya estén completos se omiten. Para una captura nueva, usá otro ID. Sin opciones, el extractor procesa solo una página por recurso, espera 1 segundo y permite hasta 6 reintentos por solicitud. El token se lee desde `ASSIST365_API_TOKEN` o se solicita sin mostrarlo en pantalla. El run local `smoke-20260929` ya está completo; sus archivos se pueden preparar sin volver a llamar la API. La carga de datos a BigQuery requiere una etapa posterior.
