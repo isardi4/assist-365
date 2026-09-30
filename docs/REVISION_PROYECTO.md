@@ -16,7 +16,7 @@ Revisión de código, contratos, documentación y consistencia de resultados. Se
 
 ## Pendientes que afectan la entrega
 
-1. **Looker y límite por carga.** El requisito es escanear como máximo 50 MB por carga del tablero, no almacenar una tabla menor a 50 MB. La tabla mide 15,21 MB y el [tablero está creado](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG), pero falta verificar acceso del destinatario y medir la carga real y filtros del conector. No se da ese requisito por cumplido.
+1. **Acceso y mantenimiento de Looker.** Falta confirmar acceso con la identidad destinataria. El escaneo de la carga inicial abril–junio ya se midió: **1.405.616 bytes procesados**, ocho jobs reales sin caché BigQuery, por debajo de 50 MB. Revalidar si cambia la configuración, el volumen o el período. [Medición y evidencia](../scripts/parte_06_tablero/README.md#medición-de-consumo).
 2. **Programación diaria.** Cloud Run Job/Scheduler no están desplegados. Se entrega el diseño y la conducta de segunda corrida; no un servicio operativo diario.
 3. **Portabilidad del pipeline.** Raw/silver/gold contienen referencias al proyecto del challenge. Las dos queries también referencian explícitamente ese proyecto. El snapshot está en GCS, fuera de Git; reconstruir raw requiere permisos sobre el bucket.
 4. **Accesos.** El token del challenge está versionado en `config/assist365.json` por decisión de entrega. El extractor lo lee por defecto; el análisis no lo utiliza. Las credenciales de Google Cloud no se versionan: cada ejecutor requiere identidad y permisos propios.

@@ -9,7 +9,7 @@
 | Gold | Cohortes mensuales: 45.875 filas, 15,21 MB, 24 conciliaciones y 21 pruebas funcionales. |
 | Análisis | Dos queries independientes desde staging: país/plan y país/canal de agencia, por cohorte mensual de emisión. |
 | Operación diaria | Diseño documentado; Cloud Run/Scheduler y extracción delta no desplegados. |
-| Looker | Tablero creado, abre sin sesión en abril–junio de 2026; ratios visibles de países/planes conciliados. Acceso del destinatario, filtros y medición real de 50 MB por carga pendientes. |
+| Looker | Tablero creado, abre sin sesión en abril–junio de 2026; ratios visibles de países/planes conciliados. Acceso del destinatario pendiente; carga inicial medida: 1.405.616 bytes procesados en ocho jobs sin caché BigQuery. |
 | Accesos | Token del challenge versionado en config/assist365.json por instrucción explícita; Google Cloud usa identidad CLI y no versiona credenciales. |
 
 La [guía de ejecución](docs/EJECUCION.md) permite ejecutar ambas queries desde un clon con acceso a BigQuery, sin token API ni archivos descargados. La [revisión general](docs/REVISION_PROYECTO.md) identifica límites de portabilidad, plan y tipo de producto, interpretación del ratio y pendientes de entrega. Los apartados de operación futura son diseño, no evidencia de despliegue.
@@ -312,3 +312,12 @@ Siete pruebas unitarias verifican selección y errores de configuración sin red
 - Aclarados límites: proyecto fijo; clon no concede IAM; reproducción sobre entorno existente no es restauración automática sobre tablas borradas; raw depende del historial de jobs para reintentos; extracción sin updated_since.
 - Prioridades de entrega: medir escaneo real del tablero y confirmar acceso del evaluador. Operación diaria diseñada sin despliegue. Premium disponible como dimensión, sin afirmar un insight adicional ya validado.
 - Se mantienen nueve README y las decisiones comerciales/anomalías; no se sumaron archivos de documentación.
+
+## Medición real de Data Studio — 30/09/2026
+
+- Chrome aislado, sin sesión; apertura con fechas 01/04/2026–30/06/2026. Ventana inicial 21:08:13.362–21:09:00 UTC.
+- Ocho jobs del reporte `be1247ad-58d9-4ed1-ba70-ca4830505fb3`, identificados por etiquetas oficiales requestor/report_id; cuatro gráficos, tres filtros y Otros. Cero aciertos de caché BigQuery y cero errores.
+- Total procesado: 1.405.616 bytes = 1,405616 MB; total facturado: 83.886.080 bytes por mínimos de facturación. Comparar el límite de escaneo de 50 MB contra procesados, no facturados.
+- SQL reproducible en parte_06_tablero/sql/001_medir_consumo.sql; evidencia con IDs, queries y metadatos en parte_06_tablero/evidence/consumo_20260930.json.
+- Sin cambios al dashboard publicado ni consultas a la API; filtros probados solo en la sesión aislada. No se ejecutaron nuevas cargas ni reglas de conciliación.
+- Interacciones por separado y sin caché BigQuery: CL. 7 jobs/1.440.024 bytes; ONLINE, 7 jobs/1.582.008 bytes; Equipaje Protegido, 6 jobs/1.305.208 bytes. Todas exitosas. Máximo observado 1,582008 MB (3,164016% de 50 MB).

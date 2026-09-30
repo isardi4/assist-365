@@ -70,4 +70,47 @@ Gold excluye pólizas D/ausentes/ANULADA y sus eventos, y retira negativos y cas
 
 **Las cohortes recientes pueden seguir acumulando siniestros y pagos.** La prima es la última informada, no prima devengada ni cobro comprobado. El corte limita ocurrencia; no reconstruye estados históricos ni fechas de pago.
 
-La tabla de consumo mide **15,21 MB**. Este tamaño no equivale al escaneo total de una carga del dashboard: el conector puede emitir varias consultas. El límite de **50 MB por carga** no se presenta como validado mediante una medición de las interacciones reales.
+## Medición de consumo
+
+**Carga inicial medida: 1.405.616 bytes procesados = 1,405616 MB**, por debajo de **50.000.000 bytes**. Medición del 30/09/2026, con el snapshot entregado y rango 01/04/2026–30/06/2026. MB se expresa en unidades decimales: 1 MB = 1.000.000 bytes.
+
+Se abrió el dashboard en Chrome con una sesión aislada, se registró la ventana UTC y se consultó `INFORMATION_SCHEMA.JOBS_BY_PROJECT`, filtrando `requestor=looker_studio` y el ID del reporte. Se sumó `total_bytes_processed` de todos los jobs de esa apertura. Las consultas de auditoría no llevan esas etiquetas y no entran en el total. [Identificación oficial de jobs del conector](https://docs.cloud.google.com/data-studio/bigquery-monitor).
+
+| Consulta de la carga inicial | Bytes procesados |
+|---|---:|
+| Siniestralidad por país | 189.244 |
+| Siniestralidad por producto | 242.264 |
+| Frecuencia/severidad por país | 189.244 |
+| Frecuencia/severidad por producto | 242.264 |
+| Categoría “Otros” del gráfico de productos | 242.264 |
+| Control de país | 51.612 |
+| Control de producto | 139.040 |
+| Control de canal de agencia | 109.684 |
+| **Total: ocho consultas** | **1.405.616** |
+
+No hubo aciertos de caché BigQuery ni errores en esta carga. El SQL emitido incluye el filtro de fechas; el conector consulta solo las columnas necesarias del mart mensual, sin leer hechos completos ni JSON. Por eso el escaneo real es menor que multiplicar el tamaño de la tabla por cuatro.
+
+Se probaron los tres filtros por separado, restableciendo la selección anterior y manteniendo el mismo trimestre. Cada fila siguiente representa **una interacción**, no una carga acumulada de toda la sesión:
+
+| Escenario | Jobs emitidos | Bytes procesados | MB procesados |
+|---|---:|---:|---:|
+| Apertura inicial, sin filtros comerciales | 8 | 1.405.616 | 1,405616 |
+| Seleccionar país CL | 7 | 1.440.024 | 1,440024 |
+| Seleccionar canal ONLINE | 7 | 1.582.008 | 1,582008 |
+| Seleccionar Equipaje Protegido | 6 | 1.305.208 | 1,305208 |
+
+Todas las consultas observadas finalizaron correctamente, sin caché BigQuery. El máximo entre las pruebas fue **1,58 MB**, el **3,16% del límite**. La cantidad de jobs varía con la interacción y la reutilización de resultados del conector; no se asume una query por gráfico.
+
+**Escaneo y facturación son distintos.** La carga inicial registró 83.886.080 bytes facturados por los mínimos por consulta; eso no representa bytes adicionales escaneados. Para verificar el requisito del ejercicio se utiliza `total_bytes_processed`, conservando también `total_bytes_billed` en la evidencia. [Reglas de facturación de BigQuery](https://cloud.google.com/bigquery/pricing).
+
+### Reproducir
+
+La [evidencia JSON](evidence/consumo_20260930.json) conserva ventanas UTC, IDs de jobs, SQL real, bytes y caché. La [query de medición](sql/001_medir_consumo.sql) devuelve el total y el detalle para la ventana inicial:
+
+```bash
+bq --project_id=a365-de-ignacio --location=us-central1 query \
+  --use_legacy_sql=false --format=json --maximum_bytes_billed=1073741824 \
+  < scripts/parte_06_tablero/sql/001_medir_consumo.sql
+```
+
+Para repetir la prueba, registrar inicio/fin UTC de una carga aislada y cambiar esas fechas en el SQL. Se requiere visibilidad de los jobs del proyecto; evitar otras sesiones del mismo reporte durante esa ventana y esperar su finalización. Si no aparecen jobs, puede haber caché del conector: la query devuelve `SIN_JOBS_OBSERVADOS`, que no prueba por sí solo el consumo sin caché. La medición depende de la configuración, los datos y el período; revalidar tras modificarlos. Los jobs históricos están sujetos a la retención de BigQuery; el JSON preserva la evidencia entregada.

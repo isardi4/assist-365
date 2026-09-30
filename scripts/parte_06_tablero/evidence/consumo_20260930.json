@@ -1,0 +1,818 @@
+{
+  "report_id": "be1247ad-58d9-4ed1-ba70-ca4830505fb3",
+  "project": "a365-de-ignacio",
+  "region": "us-central1",
+  "measured_at": "2026-09-30",
+  "metric": "total_bytes_processed",
+  "threshold_bytes": 50000000,
+  "date_from": "2026-04-01",
+  "date_to": "2026-06-30",
+  "initial_load": {
+    "started_at": "2026-09-30T21:08:13.362Z",
+    "jobs": [
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:20",
+        "creation_time_precise": "2026-09-30T21:08:20.158000Z",
+        "end_time": "2026-09-30 21:08:20",
+        "error_result": null,
+        "job_id": "E_4SjznyytsoTAL5RZF3RFjHVZkm%1a0f4259a97",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT SUM(clmn2_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821` FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`prima_usd` AS clmn2_, t0.`producto` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND (clmn3_ NOT IN ('Equipaje Protegido', 'Estudiante Larga', 'Esencial 30', 'Esencial 60', 'Cancelacion Plus', 'Senior 100', 'Clasico Plus 150', 'Corporativo Anual', 'Premium 250') OR clmn3_ IS NULL)) LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:20",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "242264"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.628000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "IRNHLC0R1K7X0aLVNEF1V8HR0u7W%1a0f42594cf",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT SUM(clmn2_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`prima_usd` AS clmn2_, t0.`producto` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30') GROUP BY clmn3_ LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "242264"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.622000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "fWKvi9KMrfqZPB7AW5wej3UfgJUw^1a0f4259497",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT clmn1_, COUNT(1) AS `t0_qt_sjvcooax7d` FROM (\nSELECT t0.`date` AS clmn0_, t0.`pais` AS clmn1_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn0_ >= DATE '2026-04-01' AND clmn0_ <= DATE '2026-06-30') GROUP BY clmn1_ ORDER BY `t0_qt_sjvcooax7d` DESC LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "51612"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.619000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "7X6Dri_0laYp3cJ3BF0euJMdSGlm@1a0f425949f",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`prima_usd` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30') GROUP BY clmn2_ LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "189244"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.586000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "44R4nKVEhJ7yEZnC9yGq9zqDmogr^1a0f4259484",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT SUM(clmn4_) AS `t0_D11972911827972995611`, SUM(clmn3_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`polizas` AS clmn3_, t0.`siniestros_pagados_con_costo_usd` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30') GROUP BY clmn2_ LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "189244"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.582000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "rEvuuVC4bLqPF6O99Cuwx7jnMvvY@1a0f425948a",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT clmn1_, COUNT(DISTINCT clmn2_) AS `t0_qt_wbll5oax7d` FROM (\nSELECT t0.`date` AS clmn0_, t0.`producto` AS clmn1_, t0.`year` AS clmn2_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn0_ >= DATE '2026-04-01' AND clmn0_ <= DATE '2026-06-30') GROUP BY clmn1_ ORDER BY `t0_qt_wbll5oax7d` DESC LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "139040"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.577000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "3tDRci54hEfQP2ol_5nhQrwxvyti@1a0f4259490",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT clmn0_, COUNT(DISTINCT clmn2_) AS `t0_qt_4m517oax7d` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`date` AS clmn1_, t0.`month` AS clmn2_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30') GROUP BY clmn0_ ORDER BY `t0_qt_4m517oax7d` DESC LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "109684"
+      },
+      {
+        "cache_hit": "false",
+        "creation_time": "2026-09-30 21:08:18",
+        "creation_time_precise": "2026-09-30T21:08:18.572000Z",
+        "end_time": "2026-09-30 21:08:18",
+        "error_result": null,
+        "job_id": "uXO5N-dfR8TL52xr0ByLg7_YhgXg@1a0f425948a",
+        "labels": [
+          {
+            "key": "looker_studio_datasource_id",
+            "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+          },
+          {
+            "key": "requestor",
+            "value": "looker_studio"
+          },
+          {
+            "key": "looker_studio_report_id",
+            "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+          }
+        ],
+        "query": "SELECT SUM(clmn4_) AS `t0_D11972911827972995611`, SUM(clmn2_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`polizas` AS clmn2_, t0.`producto` AS clmn3_, t0.`siniestros_pagados_con_costo_usd` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30') GROUP BY clmn3_ LIMIT 2000001;",
+        "start_time": "2026-09-30 21:08:18",
+        "state": "DONE",
+        "total_bytes_billed": "10485760",
+        "total_bytes_processed": "242264"
+      }
+    ],
+    "job_count": 8,
+    "processed_bytes": 1405616,
+    "billed_bytes": 83886080,
+    "bigquery_cache_hits": 0,
+    "window_end_utc": "2026-09-30T21:09:00Z"
+  },
+  "source": "INFORMATION_SCHEMA.JOBS_BY_PROJECT; requestor=looker_studio; matching report_id; controlled browser load",
+  "notes": [
+    "Four charts, three filter controls, one extra query for the Others product bucket.",
+    "Dates observed in the actual SQL. No BigQuery result-cache hits in this initial load.",
+    "Bytes processed measure scanning; billed bytes include per-query billing minimums.",
+    "This is an observation for the current snapshot, report configuration and date range; not a guarantee for all future ranges and interactions."
+  ],
+  "interactions": [
+    {
+      "scenario": "pais=CL",
+      "start": "2026-09-30T21:12:18.463Z",
+      "end": "2026-09-30T21:12:33.492Z",
+      "job_count": 7,
+      "processed_bytes": 1440024,
+      "billed_bytes": 73400320,
+      "bigquery_cache_hits": 0,
+      "jobs": [
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:19",
+          "creation_time_precise": "2026-09-30T21:12:19.546000Z",
+          "end_time": "2026-09-30 21:12:20",
+          "error_result": null,
+          "job_id": "8T8W7eVeTAA00lWkA6eVLaiPhj7B^1a0f429454b",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821` FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`prima_usd` AS clmn3_, t0.`producto` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn2_ IN ('CL') AND (clmn4_ NOT IN ('Equipaje Protegido', 'Estudiante Larga', 'Esencial 30', 'Esencial 60', 'Cancelacion Plus', 'Corporativo Anual', 'Premium 250', 'Senior 100', 'Clasico Plus 150') OR clmn4_ IS NULL)) LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:20",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "259468"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:19",
+          "creation_time_precise": "2026-09-30T21:12:19.535000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "LcTXNDj1GwOW2nEll6htqae8zCVk@1a0f42941b9",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn4_) AS `t0_D11972911827972995611`, SUM(clmn3_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`polizas` AS clmn3_, t0.`siniestros_pagados_con_costo_usd` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn2_ IN ('CL')) GROUP BY clmn2_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "189244"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:19",
+          "creation_time_precise": "2026-09-30T21:12:19.534000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "YlObxSFWrnT3AYP6HtueOAhxax5m@1a0f42941b0",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn5_) AS `t0_D11972911827972995611`, SUM(clmn3_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn4_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`polizas` AS clmn3_, t0.`producto` AS clmn4_, t0.`siniestros_pagados_con_costo_usd` AS clmn5_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn2_ IN ('CL')) GROUP BY clmn4_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "259468"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:19",
+          "creation_time_precise": "2026-09-30T21:12:19.519000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "Chw-n0efSe58jpBxy2-ZNrCZmBoH!1a0f4294195",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn2_, COUNT(DISTINCT clmn3_) AS `t0_qt_wbll5oax7d` FROM (\nSELECT t0.`date` AS clmn0_, t0.`pais` AS clmn1_, t0.`producto` AS clmn2_, t0.`year` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn0_ >= DATE '2026-04-01' AND clmn0_ <= DATE '2026-06-30' AND clmn1_ IN ('CL')) GROUP BY clmn2_ ORDER BY `t0_qt_wbll5oax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "156244"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:19",
+          "creation_time_precise": "2026-09-30T21:12:19.518000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "hL1hIfhzsdvLP6f02fMMDPGG3Ws0!1a0f42941b0",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn0_, COUNT(DISTINCT clmn2_) AS `t0_qt_4m517oax7d` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`date` AS clmn1_, t0.`month` AS clmn2_, t0.`pais` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn3_ IN ('CL')) GROUP BY clmn0_ ORDER BY `t0_qt_4m517oax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "126888"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:18",
+          "creation_time_precise": "2026-09-30T21:12:18.906000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "eaE6sW0D2OUp2WK-4l8HN360mGgJ^1a0f4293f61",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn4_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`prima_usd` AS clmn3_, t0.`producto` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn2_ IN ('CL')) GROUP BY clmn4_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "259468"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:12:18",
+          "creation_time_precise": "2026-09-30T21:12:18.905000Z",
+          "end_time": "2026-09-30 21:12:19",
+          "error_result": null,
+          "job_id": "k1xK5XbyA9c3LgVw6-FZ4LskQcRU@1a0f4293f5d",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`prima_usd` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn2_ IN ('CL')) GROUP BY clmn2_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:12:19",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "189244"
+        }
+      ]
+    },
+    {
+      "scenario": "canal_agencia=ONLINE",
+      "start": "2026-09-30T21:14:39.922Z",
+      "end": "2026-09-30T21:14:54.945Z",
+      "job_count": 7,
+      "processed_bytes": 1582008,
+      "billed_bytes": 73400320,
+      "bigquery_cache_hits": 0,
+      "jobs": [
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:41",
+          "creation_time_precise": "2026-09-30T21:14:41.191000Z",
+          "end_time": "2026-09-30 21:14:41",
+          "error_result": null,
+          "job_id": "mp9kN0VfANwvWcRmG2WxuftanPEr!1a0f42b6afe",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn1_) AS `t0_D5030924020276315821` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`costo_pagado_usd` AS clmn1_, t0.`date` AS clmn2_, t0.`prima_usd` AS clmn3_, t0.`producto` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn2_ >= DATE '2026-04-01' AND clmn2_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE') AND (clmn4_ NOT IN ('Equipaje Protegido', 'Estudiante Larga', 'Esencial 30', 'Esencial 60', 'Cancelacion Plus', 'Senior 100', 'Clasico Plus 150', 'Premium 250', 'Corporativo Anual') OR clmn4_ IS NULL)) LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:41",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "283132"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.519000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "8Ob4kZeNXjpM6wrEHZ3RgD4BfXIO@1a0f42b6892",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn1_) AS `t0_D5030924020276315821`, clmn4_ FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`costo_pagado_usd` AS clmn1_, t0.`date` AS clmn2_, t0.`prima_usd` AS clmn3_, t0.`producto` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn2_ >= DATE '2026-04-01' AND clmn2_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn4_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "283132"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.512000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "4T7nwX7euoPXxeW8oPV9OtQ8tQgV@1a0f42b6872",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn2_, COUNT(DISTINCT clmn3_) AS `t0_qt_wbll5oax7d` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`date` AS clmn1_, t0.`producto` AS clmn2_, t0.`year` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn2_ ORDER BY `t0_qt_wbll5oax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "179908"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.512000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "hPha07kAjxnwnGO0Ofi-HgtOZyZY^1a0f42b686f",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn5_) AS `t0_D11972911827972995611`, SUM(clmn3_) AS `t0_D13322350762921314342`, SUM(clmn1_) AS `t0_D5030924020276315821`, clmn4_ FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`costo_pagado_usd` AS clmn1_, t0.`date` AS clmn2_, t0.`polizas` AS clmn3_, t0.`producto` AS clmn4_, t0.`siniestros_pagados_con_costo_usd` AS clmn5_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn2_ >= DATE '2026-04-01' AND clmn2_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn4_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "283132"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.511000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "yUGleprJRmjGN9ZuzO1s-NlwE0CI@1a0f42b6870",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn2_, COUNT(1) AS `t0_qt_sjvcooax7d` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn2_ ORDER BY `t0_qt_sjvcooax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "92480"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.509000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "aND_YEJIwpZ4i1C3lP5G3MeCAdys!1a0f42b686f",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn4_) AS `t0_D16685832336574090434`, SUM(clmn1_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`costo_pagado_usd` AS clmn1_, t0.`date` AS clmn2_, t0.`pais` AS clmn3_, t0.`prima_usd` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn2_ >= DATE '2026-04-01' AND clmn2_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn3_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "230112"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:14:40",
+          "creation_time_precise": "2026-09-30T21:14:40.470000Z",
+          "end_time": "2026-09-30 21:14:40",
+          "error_result": null,
+          "job_id": "BwWrKucbyQw6JGo7R4BCFC1n7a-I!1a0f42b6850",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn5_) AS `t0_D11972911827972995611`, SUM(clmn4_) AS `t0_D13322350762921314342`, SUM(clmn1_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`costo_pagado_usd` AS clmn1_, t0.`date` AS clmn2_, t0.`pais` AS clmn3_, t0.`polizas` AS clmn4_, t0.`siniestros_pagados_con_costo_usd` AS clmn5_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn2_ >= DATE '2026-04-01' AND clmn2_ <= DATE '2026-06-30' AND clmn0_ IN ('ONLINE')) GROUP BY clmn3_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:14:40",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "230112"
+        }
+      ]
+    },
+    {
+      "scenario": "producto=Equipaje Protegido",
+      "start": "2026-09-30T21:19:58.819Z",
+      "end": "2026-09-30T21:20:13.843Z",
+      "job_count": 6,
+      "processed_bytes": 1305208,
+      "billed_bytes": 62914560,
+      "bigquery_cache_hits": 0,
+      "jobs": [
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.514000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "oGqc3NvKgn7qkf9Af-wejvCIQ-jM@1a0f4304678",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn1_, COUNT(1) AS `t0_qt_sjvcooax7d` FROM (\nSELECT t0.`date` AS clmn0_, t0.`pais` AS clmn1_, t0.`producto` AS clmn2_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn0_ >= DATE '2026-04-01' AND clmn0_ <= DATE '2026-06-30' AND clmn2_ IN ('Equipaje Protegido')) GROUP BY clmn1_ ORDER BY `t0_qt_sjvcooax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "121836"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.449000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "HIyM6AIbodY3onExRE1mMdvAqCMJ%1a0f430465f",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn3_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`prima_usd` AS clmn3_, t0.`producto` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn4_ IN ('Equipaje Protegido')) GROUP BY clmn2_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "259468"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.435000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "7hUYD5NT_roBc4Kx5SMwZ4rP0VMe@1a0f430465f",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn4_) AS `t0_D11972911827972995611`, SUM(clmn2_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`polizas` AS clmn2_, t0.`producto` AS clmn3_, t0.`siniestros_pagados_con_costo_usd` AS clmn4_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn3_ IN ('Equipaje Protegido')) GROUP BY clmn3_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "242264"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.415000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "QC6FZ0Hj43ziBGy7RHsXaMR5F9c2!1a0f4304641",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT clmn0_, COUNT(DISTINCT clmn2_) AS `t0_qt_4m517oax7d` FROM (\nSELECT t0.`canal_agencia` AS clmn0_, t0.`date` AS clmn1_, t0.`month` AS clmn2_, t0.`producto` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn3_ IN ('Equipaje Protegido')) GROUP BY clmn0_ ORDER BY `t0_qt_4m517oax7d` DESC LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "179908"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.412000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "SNzODtYK483VTXJEvVQImWXw_Tfm@1a0f4304622",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn5_) AS `t0_D11972911827972995611`, SUM(clmn3_) AS `t0_D13322350762921314342`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn2_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`pais` AS clmn2_, t0.`polizas` AS clmn3_, t0.`producto` AS clmn4_, t0.`siniestros_pagados_con_costo_usd` AS clmn5_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn4_ IN ('Equipaje Protegido')) GROUP BY clmn2_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "259468"
+        },
+        {
+          "cache_hit": "false",
+          "creation_time": "2026-09-30 21:19:59",
+          "creation_time_precise": "2026-09-30T21:19:59.403000Z",
+          "end_time": "2026-09-30 21:19:59",
+          "error_result": null,
+          "job_id": "6pw0rwTSyi-hvh31RFM1hqTHGuXK!1a0f4304634",
+          "labels": [
+            {
+              "key": "looker_studio_datasource_id",
+              "value": "eaff1e3b-705b-497b-8331-c3038b8ff248"
+            },
+            {
+              "key": "requestor",
+              "value": "looker_studio"
+            },
+            {
+              "key": "looker_studio_report_id",
+              "value": "be1247ad-58d9-4ed1-ba70-ca4830505fb3"
+            }
+          ],
+          "query": "SELECT SUM(clmn2_) AS `t0_D16685832336574090434`, SUM(clmn0_) AS `t0_D5030924020276315821`, clmn3_ FROM (\nSELECT t0.`costo_pagado_usd` AS clmn0_, t0.`date` AS clmn1_, t0.`prima_usd` AS clmn2_, t0.`producto` AS clmn3_ FROM `a365-de-ignacio.assist365_mart.dashboard_diario` AS t0\n) WHERE (clmn1_ >= DATE '2026-04-01' AND clmn1_ <= DATE '2026-06-30' AND clmn3_ IN ('Equipaje Protegido')) GROUP BY clmn3_ LIMIT 2000001;",
+          "start_time": "2026-09-30 21:19:59",
+          "state": "DONE",
+          "total_bytes_billed": "10485760",
+          "total_bytes_processed": "242264"
+        }
+      ]
+    }
+  ]
+}

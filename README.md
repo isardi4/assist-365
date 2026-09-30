@@ -1,6 +1,6 @@
 # Assist-365 — pipeline y análisis de siniestralidad
 
-Solución del challenge de Data Engineering: cinco recursos de API conservados en GCS, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión. **Estado revisado al 30/09/2026:** flujo validado por CLI y dashboard disponible; automatización diaria y medición del escaneo real de Looker pendientes.
+Solución del challenge de Data Engineering: cinco recursos de API conservados en GCS, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión. **Estado revisado al 30/09/2026:** flujo validado por CLI y dashboard disponible; consumo real del dashboard medido y automatización diaria pendiente.
 
 **[Abrir el dashboard](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG)**. Inicia en abril–junio de 2026 y permite comparar países, planes y frecuencia/severidad, con filtros de país, producto y canal de agencia.
 
@@ -90,6 +90,14 @@ La evidencia incluye **29 comprobaciones raw, 13 staging y 24 gold**, más 21 pr
 
 El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden seguir acumulando costo. El flujo se ejecuta por CLI con snapshots y cargas raw→staging incrementales.
 
+## Consumo real del dashboard
+
+El 30/09/2026 se abrió el tablero en una sesión aislada, con rango **01/04/2026–30/06/2026**. Se identificaron los jobs en `INFORMATION_SCHEMA.JOBS_BY_PROJECT` mediante las etiquetas `requestor=looker_studio` y el ID del reporte, dentro de la ventana de prueba. Se sumó `total_bytes_processed` de **todas** las consultas del conector, excluyendo las consultas manuales de auditoría.
+
+La carga generó **ocho consultas**: cuatro gráficos, tres controles de filtro y una adicional para “Otros”. Procesó **1.405.616 bytes = 1,405616 MB**, el **2,81% del límite de 50 MB**, sin aciertos de caché BigQuery. El SQL real incluye las fechas y consume solo las columnas necesarias del agregado mensual; no lee raw ni staging. Las pruebas individuales de país CL, canal ONLINE y Equipaje Protegido también quedaron debajo del límite; el mayor escaneo observado fue **1.582.008 bytes (1,58 MB)**.
+
+La facturación registró **83.886.080 bytes (83,89 MB)** por los mínimos por consulta. Es distinta del escaneo solicitado por el ejercicio; el indicador para ese requisito es **bytes procesados**, no tamaño almacenado ni bytes facturados. [Criterio de facturación de BigQuery](https://cloud.google.com/bigquery/pricing). [Desglose, filtros y reproducción de la medición](scripts/parte_06_tablero/README.md#medición-de-consumo).
+
 ## Cobertura del ejercicio y prioridades
 
 | Punto solicitado | Estado | Entrega y criterio |
@@ -99,7 +107,7 @@ El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden s
 | **3. Modelo** | Implementado | Hecho de ventas: `polizas_activas`, una fila por póliza; hecho de siniestros: `siniestros`, una fila por evento. Catálogos de producto/agencia y FX fecha/moneda, más historial de pólizas. Los granos y reglas I/U/D están documentados. |
 | **4. Orquestación diaria** | Diseño, sin despliegue | CLI reproducible y recuperación implementadas. Cloud Run/Scheduler no desplegados: se priorizó cerrar datos y análisis antes de automatizar. La segunda extracción sería un snapshot completo; el mismo run_id reanuda una captura. |
 | **5. Análisis** | Implementado | Dos queries mensuales con prima/costo USD y cantidades. Siniestralidad por país/plan e insight de canal por país, con evolución de tres trimestres. |
-| **6. Tablero** | Parcial | Una página, cuatro gráficos y filtros sobre gold; enlace y captura incluidos. Se priorizaron preagregación y métricas: tabla de 15,21 MB y ratios visibles conciliados. **No se midió el escaneo real por carga**, por lo que el límite de 50 MB no se declara cumplido. |
+| **6. Tablero** | Implementado; consumo medido | Una página, cuatro gráficos y tres filtros sobre gold. Carga inicial abril–junio: **1.405.616 bytes procesados (1,41 MB)** en ocho jobs reales, sin caché BigQuery, por debajo de 50 MB. Enlace, captura, SQL de medición y evidencia incluidos. |
 | **7. README** | Implementado | Arquitectura, ejecución, decisiones, anomalías, resultados y límites por capa. |
 | **Bonus 1. Capa semántica y MCP** | No implementado | Definiciones en documentación, sin SKILL.md ni cinco preguntas ejecutadas vía MCP. Se priorizaron SQL reproducibles y el tablero. |
 | **Bonus 2. Tests de datos** | Implementado en SQL | Conciliaciones y pruebas con tablas temporales para I/U/D, transacciones, flags y agregación. Se usó SQL nativo sin sumar otro framework. |
@@ -112,7 +120,7 @@ El orden elegido fue **datos completos y trazables → reglas de negocio y calid
 
 | Prioridad | Pendiente | Criterio de cierre |
 |---|---|---|
-| Entrega | Medir **50 MB máximo por carga del dashboard**. Los 15,21 MB de almacenamiento no prueban ese requisito. | Registrar el escaneo real de todas las consultas de una carga y de los filtros del conector. |
+| Mantenimiento | Revalidar el consumo al cambiar datos, gráficos o rango temporal. | Repetir la medición de una carga aislada y sus filtros; la validación actual corresponde a la configuración y captura entregadas. |
 | Entrega | Confirmar acceso del evaluador al dashboard y al proyecto/bucket. | Verificar con la identidad destinataria; la apertura sin sesión ya fue comprobada. |
 | Operación | Desplegar Cloud Run Job + Scheduler. | Ejecución diaria con identidad de servicio, etapas secuenciales y registro/alerta de fallas. El diseño está documentado. |
 | Portabilidad | Parametrizar proyecto/datasets y definir restauración y retención de artefactos. | Poder instalar en otro proyecto y recuperar un entorno vacío sin editar referencias ni depender de confirmaciones anteriores. |

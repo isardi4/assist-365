@@ -78,6 +78,6 @@ bq --project_id=a365-de-ignacio --location=us-central1 query \
   < scripts/parte_03_modelo_bigquery/claims_audit/flag_tests.sql
 ```
 
-Para consumo final, abrir el [dashboard y su guía](../scripts/parte_06_tablero/README.md). El análisis no requiere token API. La ejecución entregada es por CLI; el despliegue diario cloud no está implementado y el escaneo real por carga del tablero no se presenta como medido.
+Para consumo final, abrir el [dashboard y su guía](../scripts/parte_06_tablero/README.md). El análisis no requiere token API. La ejecución entregada es por CLI; el despliegue diario cloud no está implementado. La carga inicial del tablero para abril–junio de 2026 registró 1.405.616 bytes procesados, con [medición y SQL reproducible](../scripts/parte_06_tablero/README.md#medición-de-consumo).
 
 El corte de gold debe corresponder a la captura disponible. Gold acumula los siniestros elegibles de cada cohorte hasta ese corte; al llegar una captura nueva, reconstruir con el corte actualizado. Los filtros de Looker seleccionan meses de emisión completos.
