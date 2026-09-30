@@ -171,7 +171,7 @@ La facturación registró **83.886.080 bytes (83,89 MB)** por los mínimos por c
 | **5. Análisis** | Implementado | Dos queries mensuales con prima/costo USD y cantidades. Siniestralidad por país/plan e insight de canal por país, con evolución de tres trimestres. |
 | **6. Tablero** | Implementado; consumo medido | Una página, cuatro gráficos y tres filtros sobre gold. Carga inicial abril–junio: **1.405.616 bytes procesados (1,41 MB)** en ocho jobs reales, sin caché BigQuery, por debajo de 50 MB. Enlace, captura, SQL de medición y evidencia incluidos. |
 | **7. README** | Implementado | Arquitectura, ejecución, decisiones, anomalías, resultados y límites por capa. |
-| **Bonus 1. Capa semántica y MCP** | No implementado | Definiciones en documentación, sin SKILL.md ni cinco preguntas ejecutadas vía MCP. Se priorizaron SQL reproducibles y el tablero. |
+| **Bonus 1. Capa semántica y MCP** | Parcial | [SKILL.md](SKILL.md) con tablas, glosario, métricas, reglas y cinco preguntas de ejemplo. Faltan las cinco ejecuciones verificadas vía MCP. |
 | **Bonus 2. Tests de datos** | Implementado en SQL | Conciliaciones y pruebas con tablas temporales para I/U/D, transacciones, flags y agregación. Se usó SQL nativo sin sumar otro framework. |
 | **Bonus 3. GitHub Actions** | No implementado | Pruebas ejecutables manualmente; CI quedó fuera para concentrar tiempo en validar el warehouse. |
 | **Bonus 4. Video** | No realizado | La entrega se explica mediante código, documentación y dashboard; se priorizaron resultados reproducibles. |
@@ -186,7 +186,7 @@ El orden elegido fue **datos completos y trazables → reglas de negocio y calid
 | Accesos | Revisar permisos si se incorporan otros evaluadores. | La cuenta de la empresa indicada en el ejercicio es Owner del proyecto; los cuatro datasets y GCS reconocen a sus propietarios. Dashboard público. [Comprobación IAM](docs/evidence/acceso_20260930.json). |
 | Operación | Desplegar Cloud Run Job + Scheduler. | Ejecución diaria con identidad de servicio, etapas secuenciales y registro/alerta de fallas. El diseño está documentado. |
 | Portabilidad | Parametrizar proyecto/datasets y definir restauración y retención de artefactos. | Poder instalar en otro proyecto y recuperar un entorno vacío sin editar referencias ni depender de confirmaciones anteriores. |
-| Evolución | Extracción delta, CI, capa semántica y evolución del modelo. | Incorporar watermark para pólizas; automatizar pruebas; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
+| Evolución | Extracción delta, CI, validación MCP y evolución del modelo. | Incorporar watermark para pólizas; automatizar pruebas; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
 
 El [diseño de orquestación](scripts/parte_04_orquestacion/README.md) detalla el alcance cloud. El video y los bonus no implementados permanecen fuera de la entrega actual.
 

@@ -393,3 +393,8 @@ README central amplía frecuencia/severidad con elección de denominadores, pobl
 
 
 Aclarada la anomalía FX en el README central: control del producto factor_usd×unidades_por_usd con tolerancia absoluta 0,000001; conversión según contrato explícito monto×factor_usd. No se infiere cuál campo es incorrecto ni se reemplazan tasas. Cambio de explicación, sin cambios en datos o fórmulas.
+
+
+## Skill semántica de análisis — 30/09/2026
+
+Creado SKILL.md en la raíz como artefacto de entrega, usando skill-creator. Incluye esquema/granos y relaciones, glosario breve, cuatro métricas, población/corte/FX, límites operativos y cinco preguntas naturales de ejemplo. Referencias al código y documentación; sin instalación global ni configuración de credenciales. Las herramientas MCP disponibles en esta sesión no incluyen consultas BigQuery. No se crean servidores ni se declara cumplida la ejecución de cinco preguntas vía MCP: Bonus 1 pasa a parcial. Sin consultas API ni nuevas cargas; README y bonus actualizan el alcance real.

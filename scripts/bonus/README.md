@@ -14,7 +14,7 @@ Se implementaron pruebas en SQL nativo de BigQuery y conciliaciones en los ejecu
 
 [Requisitos y comandos para ejecutarlas](../../docs/EJECUCION.md#validaciones). Las pruebas SQL se ejecutan manualmente; para configuración API usar `python3 -m unittest scripts.bonus.test_api_token`. No hay workflow de GitHub Actions.
 
-La capa semántica con SKILL.md y cinco preguntas vía MCP, CI y video no se implementaron. Se priorizó validar las métricas y completar el dashboard antes de sumar estas capacidades. Las definiciones de negocio están en el [README principal](../../README.md#capa-gold).
+Se entrega una [skill de análisis](../../SKILL.md) con glosario, tablas/granos, métricas, reglas de población/FX y cinco preguntas de ejemplo. Para usarla, indicar al asistente que lea `SKILL.md` y consulte BigQuery con esas definiciones. El archivo está versionado en el repositorio; su instalación y conexión dependen del entorno del asistente. **El bonus semántico está parcial:** las cinco preguntas todavía no tienen ejecuciones verificadas vía MCP. Una ejecución con `bq` no acredita ese requisito. CI y video no se implementaron.
 
 Las pruebas offline de almacenamiento cubren páginas/checkpoints en GCS, recuperación sin API, conflictos de generación, integridad de preparación, ledger de errores, URI de carga y omisión de snapshots ya migrados:
 
