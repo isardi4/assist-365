@@ -132,7 +132,7 @@ Cantidades de staging completo al corte de referencia; las categorías pueden su
 | **552 referencias sin póliza** | Marcar `POLIZA_AUSENTE`, sin inventar entidades o fechas. Fuera de gold. |
 | **4.145 ocurrencias futuras** | Conservar la fecha original y excluir eventos posteriores al corte 29/09/2026 del costo observado. |
 | **438 eventos de última ANULADA y 3.473 de última D** | Excluir la póliza completa y sus eventos de este análisis; conservarlos para auditoría e historia. |
-| **3.703 factores FX no recíprocos, de 5.124** | Respetar `factor_usd` del contrato, sin invertirlo ni corregirlo silenciosamente. |
+| **3.703 cotizaciones con diferencias entre sus dos campos, de 5.124** | El producto `factor_usd × unidades_por_usd` difiere de 1 más de 0,000001. La API indica convertir con `monto × factor_usd`: se aplica esa regla y se informa la diferencia, sin sustituir la tasa por `1 / unidades_por_usd`. |
 
 Los flags separan cobertura de validez monetaria. `excluir_calculos` retira también importes nulos, moneda irrecuperable o falta de cotización válida. **Una moneda inferida válida se incluye**. Para analizar solo cobertura coincidente, gold ofrece `*_con_periodo`; se conservan prima y pólizas como denominadores.
 

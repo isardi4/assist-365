@@ -390,3 +390,6 @@ El ejercicio indica vencimiento del acceso del proyecto 02/10/2026 02:35 UTC (01
 ## Fundamentos y glosario para entrega — 30/09/2026
 
 README central amplía frecuencia/severidad con elección de denominadores, población PAGADO común, proxy por póliza sin ajustar duración y promedio observado. Ejemplo ficticio 1.000 pólizas/100 eventos/USD 50.000 costo/USD 200.000 prima; identidad frecuencia×severidad/prima media con denominadores válidos. Glosario compacto: prima, siniestro, costo, elegibilidad, cohorte/vigencia/corte/maduración, exposición, devengada/margen, grano e idempotencia. Referencia CAS confirma distinción exposición/eventos; no se presenta el indicador como frecuencia actuarial anual ni probabilidad de pólizas afectadas. Partes 5 y 6 enlazan a definiciones únicas; fórmulas y datos sin cambios.
+
+
+Aclarada la anomalía FX en el README central: control del producto factor_usd×unidades_por_usd con tolerancia absoluta 0,000001; conversión según contrato explícito monto×factor_usd. No se infiere cuál campo es incorrecto ni se reemplazan tasas. Cambio de explicación, sin cambios en datos o fórmulas.
