@@ -304,3 +304,11 @@ Siete pruebas unitarias verifican selección y errores de configuración sin red
 - 14 pruebas offline aprobadas (7 almacenamiento y 7 configuración API). Validación real de los cinco recursos desde GCS aprobada: 1.147.859 filas idénticas a raw en tablas temporales de control, eliminadas al terminar. Cero filas agregadas a raw productiva y cero llamadas API. Repetición del cargador cloud omitió el snapshot migrado; 29 comprobaciones raw existentes aprobadas, con evidencia en GCS.
 - Preparación real GCS→NDJSON GCS probada con productos: 12 filas y checksum comprimido idéntico al artefacto de referencia.
 - Staging ejecutado desde el manifiesto GCS: job `assist365_silver_b74b6d23eb7346afb852c3fcb9c0e228`, SUCCESS; mismos conteos en las seis tablas y evidencia cloud en `silver/smoke-20260929/`.
+
+## Revisión integral del README central — 30/09/2026
+
+- Contrastado contra los siete puntos y cuatro bonus del ejercicio, código, README por capa y evidencias de la migración GCS. Sin llamadas a API ni nuevas cargas/verificaciones BigQuery.
+- Central actualizado con inventario y volúmenes de capas, operación/segunda corrida, estado GCS, requisitos de acceso, métricas e insights y tabla de pendientes con criterios de cierre.
+- Aclarados límites: proyecto fijo; clon no concede IAM; reproducción sobre entorno existente no es restauración automática sobre tablas borradas; raw depende del historial de jobs para reintentos; extracción sin updated_since.
+- Prioridades de entrega: medir escaneo real del tablero y confirmar acceso del evaluador. Operación diaria diseñada sin despliegue. Premium disponible como dimensión, sin afirmar un insight adicional ya validado.
+- Se mantienen nueve README y las decisiones comerciales/anomalías; no se sumaron archivos de documentación.

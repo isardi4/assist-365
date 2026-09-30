@@ -1,28 +1,39 @@
 # Assist-365 — pipeline y análisis de siniestralidad
 
-Solución del challenge de Data Engineering: ingesta de cinco recursos, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión.
+Solución del challenge de Data Engineering: cinco recursos de API conservados en GCS, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión. **Estado revisado al 30/09/2026:** flujo validado por CLI y dashboard disponible; automatización diaria y medición del escaneo real de Looker pendientes.
 
 **[Abrir el dashboard](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG)**. Inicia en abril–junio de 2026 y permite comparar países, planes y frecuencia/severidad, con filtros de país, producto y canal de agencia.
 
 ## Acceso y ejecución
 
 - **Consultar resultados:** abrir el dashboard o ejecutar las [dos queries de análisis](scripts/parte_05_analisis/README.md) con acceso a BigQuery. No requieren token API ni archivos locales.
-- **Reconstruir modelos:** seguir la [guía de ejecución](docs/EJECUCION.md). Staging consume raw y gold consume staging; recrear raw usa el snapshot conservado en GCS, sin volver a consultar la API.
-- **Entorno:** Python 3.10+, Google Cloud CLI y permisos en `a365-de-ignacio`, región `us-central1`. Los destinos están vinculados a ese proyecto.
+- **Reejecutar el flujo:** seguir la [guía de ejecución](docs/EJECUCION.md). El snapshot `smoke-20260929` está en GCS; las cargas y los modelos no necesitan consultar nuevamente la API. Su manifiesto conserva la confirmación de carga y evita insertarlo otra vez en raw.
+- **Entorno:** Python 3.10+, Google Cloud CLI y permisos en `a365-de-ignacio`, región `us-central1`. No requiere dependencias pip. Clonar el repositorio no concede permisos: la identidad debe poder leer GCS y crear jobs BigQuery; para ejecutar cargas/modelos también necesita escritura en sus destinos. Los scripts y SQL están vinculados al proyecto entregado.
 - **API:** el token del challenge está incluido en [config/assist365.json](config/assist365.json) y el extractor lo lee automáticamente. Las credenciales de Google Cloud se obtienen con `gcloud auth login`, no desde ese archivo.
 
 ## Arquitectura
 
 `API → gzip y checkpoints en GCS → raw → staging → mart → Looker Studio`
 
-| Dataset | Contenido |
-|---|---|
-| `assist365_raw` | Una tabla por recurso: pólizas, siniestros, agencias, productos y tipo de cambio. JSON original y trazabilidad de carga. |
-| `assist365_staging` | Seis tablas físicas: historial y último estado de pólizas, siniestros únicos y tres catálogos. |
-| `assist365_mart` | `dashboard_diario`: agregado **mensual** por cohorte de emisión y dimensiones comerciales. |
-| `assist365_control` | Ejecuciones, checkpoints, conciliaciones y revisión de anomalías, separados de los datos de negocio. |
+| Capa | Tablas y contenido | Volumen de referencia |
+|---|---|---|
+| `assist365_raw` | `polizas`, `siniestros`, `agencias`, `productos`, `tipo_cambio`: JSON original y trazabilidad de carga. | 1.147.859 registros en cinco tablas. |
+| `assist365_staging` | `polizas`: historial; `polizas_activas`: último estado no D; `siniestros`: eventos únicos; catálogos de agencias, productos y FX. Todas son tablas físicas. | 1.003.461 eventos de pólizas; 780.000 pólizas actuales; 138.133 siniestros; 300 agencias; 12 productos; 5.124 cotizaciones. |
+| `assist365_mart` | `dashboard_diario`: agregado **mensual** por cohorte de emisión y dimensiones comerciales. | 45.875 filas; 37 campos; 15,21 MB. |
+| `assist365_control` | Ejecuciones, checkpoints, conciliaciones y revisión de anomalías, separados de los datos de negocio. | Evidencia operativa; no se usa como fuente del dashboard. |
 
-La captura de referencia es del **29/09/2026**. Sus archivos están en `gs://a365-de-ignacio-assist365-data`: `raw/` contiene páginas/checkpoints y `bigquery-load/` contiene NDJSON/manifiestos/recibos. Las evidencias nuevas de modelos se guardan en `silver/` y `gold/`. El bucket comparte región con BigQuery y requiere acceso autenticado.
+La captura de referencia es del **29/09/2026**. Sus archivos están en `gs://a365-de-ignacio-assist365-data`: `raw/` contiene páginas/checkpoints y `bigquery-load/` contiene NDJSON/manifiestos/recibos. Las evidencias nuevas de modelos se guardan en `silver/` y `gold/`. El bucket comparte región con BigQuery, usa acceso uniforme y tiene acceso público bloqueado. La migración verificó 1.316 archivos más dos manifiestos actualizados. Los cinco recursos se cargaron desde GCS en tablas de prueba y coincidieron con raw; las tablas de prueba se eliminaron. La preparación usa temporales efímeros para compresión, sin requerir un snapshot local persistente.
+
+## Operación y segunda corrida
+
+| Etapa | Comportamiento implementado |
+|---|---|
+| Extracción | Una captura nueva descarga el snapshot completo. Repetir `run_id` reanuda páginas/checkpoints en GCS. El parámetro API `updated_since` todavía no está integrado. |
+| Raw | Carga NDJSON gzip mediante URI GCS y valida integridad antes de enviar archivos. Reutiliza jobs confirmados mientras BigQuery conserve su historial; el snapshot de referencia tiene además una confirmación de migración en su manifiesto. |
+| Staging | MERGE transaccional para I/U/D, eventos tardíos y correcciones; checkpoints por lote y versión SQL. Lotes idénticos confirmados se omiten. Los catálogos se procesan como snapshots completos. |
+| Gold | Reconstrucción del agregado para un corte explícito después de staging, con validación antes de publicar. |
+
+La ejecución es manual por CLI: no hay un servicio diario programado. La guía reutiliza el entorno entregado; no constituye un instalador genérico para otro proyecto ni una restauración automática de tablas eliminadas. Los reintentos de raw no sustituyen una deduplicación permanente entre snapshots diferentes.
 
 ## Decisiones del modelo
 
@@ -67,9 +78,15 @@ La publicación gold comprende **733.169 pólizas** y **128.890 siniestros elegi
 
 ## Resultados y alcance
 
-La siniestralidad operativa es `SUM(costo_pagado_usd) / SUM(prima_usd)`. En abril–junio de 2026, Chile presenta el mayor ratio observado (**41,82%**) y Equipaje Protegido alcanza **144,63%**. El [análisis](scripts/parte_05_analisis/README.md) explica la evolución de tres trimestres y el papel de frecuencia, severidad y prima media.
+Las dos queries desde staging responden por **mes de emisión, país/plan** y **mes de emisión, país/canal de agencia**, con cantidades de pólizas y siniestros, prima y costo USD. El dashboard usa el mismo criterio sobre gold y abre en abril–junio de 2026.
 
-Las validaciones incluyen **13 conciliaciones staging, 24 gold, 21 pruebas funcionales gold y ocho pruebas de flags**. Las pruebas reproducibles y requisitos están en la guía de ejecución.
+- **País a revisar:** Chile tiene el mayor ratio observado del trimestre, **41,82%**, frente a **38,17%** de la cartera.
+- **Plan a revisar:** Equipaje Protegido alcanza **144,63%**; el costo pagado supera la prima. Su prima media baja ayuda a explicar el ratio, sin demostrar margen neto.
+- **Insight adicional:** ONLINE en Chile pasa de **57,07% a 65,15%** entre oct–dic 2025 y abr–jun 2026, mientras la cartera baja de **40,11% a 38,17%**. En el último trimestre, sus frecuencia y severidad superan las de CALL_CENTER; corresponde revisar mezcla de planes/agencias antes de atribuir causalidad al canal.
+
+El [análisis completo](scripts/parte_05_analisis/README.md) incluye los tres trimestres y los componentes del ratio. Premium/no premium está disponible en gold; no se presenta una conclusión específica validada sobre esa comparación.
+
+La evidencia incluye **29 comprobaciones raw, 13 staging y 24 gold**, más 21 pruebas funcionales gold, ocho pruebas de flags y 14 pruebas offline de configuración/almacenamiento. Las comprobaciones raw son cinco por recurso —filas, páginas, posiciones duplicadas, metadatos y marcadores no finitos—, una de inventario de páginas y tres de tablas de control. Son un conjunto fijo de controles: cada ejecución registra sus resultados, sin implicar nuevas cargas de datos. Staging también se ejecutó correctamente desde el manifiesto GCS, conservando los conteos indicados. [Pruebas y comandos](scripts/bonus/README.md).
 
 El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden seguir acumulando costo. El flujo se ejecuta por CLI con snapshots y cargas raw→staging incrementales.
 
@@ -91,7 +108,17 @@ El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden s
 
 El orden elegido fue **datos completos y trazables → reglas de negocio y calidad → métricas verificadas → dashboard**. Las anomalías de moneda, negativos y cobertura podían distorsionar las respuestas comerciales; resolver su tratamiento tuvo prioridad sobre despliegue diario y bonus. Se reutilizó la captura disponible para desarrollar el modelo y el análisis sin repetir consultas a la API.
 
-Con más tiempo, las prioridades serían medir el consumo real de Looker y verificar el acceso del destinatario, desplegar la operación diaria y parametrizar el proyecto. Después incorporar extracción delta, CI y capa semántica. El [diseño de orquestación](scripts/parte_04_orquestacion/README.md) explica la automatización propuesta.
+## Pendientes y mejoras
+
+| Prioridad | Pendiente | Criterio de cierre |
+|---|---|---|
+| Entrega | Medir **50 MB máximo por carga del dashboard**. Los 15,21 MB de almacenamiento no prueban ese requisito. | Registrar el escaneo real de todas las consultas de una carga y de los filtros del conector. |
+| Entrega | Confirmar acceso del evaluador al dashboard y al proyecto/bucket. | Verificar con la identidad destinataria; la apertura sin sesión ya fue comprobada. |
+| Operación | Desplegar Cloud Run Job + Scheduler. | Ejecución diaria con identidad de servicio, etapas secuenciales y registro/alerta de fallas. El diseño está documentado. |
+| Portabilidad | Parametrizar proyecto/datasets y definir restauración y retención de artefactos. | Poder instalar en otro proyecto y recuperar un entorno vacío sin editar referencias ni depender de confirmaciones anteriores. |
+| Evolución | Extracción delta, CI, capa semántica y evolución del modelo. | Incorporar watermark para pólizas; automatizar pruebas; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
+
+El [diseño de orquestación](scripts/parte_04_orquestacion/README.md) detalla el alcance cloud. El video y los bonus no implementados permanecen fuera de la entrega actual.
 
 ## Documentación
 
