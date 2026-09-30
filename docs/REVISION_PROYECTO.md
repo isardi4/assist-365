@@ -1,6 +1,6 @@
 # Revisión de entrega — 2026-09-30
 
-Revisión de código, contratos, documentación y consistencia de resultados. Se mantuvo el pipeline existente; los análisis se incorporaron en archivos nuevos. No se consultó la API ni se modificaron datos de negocio.
+Revisión de código, contratos, documentación y consistencia de resultados. Se verificaron comandos desde un clon limpio y se ejecutó el flujo desde GCS hasta gold sobre el snapshot disponible. Se corrigieron los puntos que impedían arrancar o repetir etapas; no se consultó la API ni se cambiaron las reglas de negocio.
 
 | Punto revisado | Resultado / decisión |
 |---|---|
@@ -11,8 +11,12 @@ Revisión de código, contratos, documentación y consistencia de resultados. Se
 | Joins analíticos | Prima y costo agregados por separado; siniestros agrupados por póliza antes del join; prima/costo atribuidos a su cohorte sin multiplicar pólizas. |
 | Agencia | Nombre no único: el análisis agrupa por canal de catálogo y país, sin combinar agencias por nombre. |
 | Canales | Canal de origen de póliza y canal de catálogo de agencia son atributos diferentes; el análisis solicitado usa el canal de agencia sin reemplazar el canal de origen. |
-| Reproducibilidad | Dos SQL independientes por cohorte de emisión, con fechas de selección/corte declaradas al inicio y resultados directos. No necesitan exportadores. |
+| Reproducibilidad | CLI única desde GCS probada en un clon limpio; dos SQL analíticos ejecutados, con fechas y corte explícitos. No dependen de snapshots locales ni del Markdown del ejercicio. |
 | Documentación | Comandos corregidos, estado actual separado de diseño futuro y decisiones fundamentadas en datos. |
+
+## Ensayo de ejecución
+
+El 30/09/2026, sobre el commit `5f6b5d7`, finalizaron preparación, verificación raw, staging y reconstrucción gold. Gold conservó 45.875 filas y 15.212.749 bytes; pasaron 20 pruebas offline, pruebas SQL incrementales/gold/flags/UTC y las dos consultas analíticas. Los 11 comandos CLI probados arrancan. La extracción se verificó con fixtures y con el checkpoint completo; no se prueba aquí disponibilidad ni una captura nueva de la API. [Evidencia y referencias cloud](evidence/ensayo_20260930.json).
 
 ## Pendientes que afectan la entrega
 

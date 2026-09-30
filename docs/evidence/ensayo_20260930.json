@@ -1,0 +1,77 @@
+{
+  "tested_at": "2026-09-30",
+  "tested_commit": "5f6b5d780baf77f92f8599cb31181392c70f7043",
+  "environment": "Clean Git clone, Python standard library and Google Cloud CLI; no .local_data or EJERCICIO.md",
+  "source_api_calls": 0,
+  "pipeline": {
+    "status": "SUCCESS",
+    "run_id": "smoke-20260929",
+    "fecha_corte": "2026-09-29",
+    "started_at": "2026-09-30T21:46:39Z",
+    "finished_at": "2026-09-30T21:50:46Z",
+    "command": "python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29",
+    "report_uri": "gs://a365-de-ignacio-assist365-data/pipeline/smoke-20260929/40041073e6d041b486527e0f7dd323f0/report.json",
+    "raw_replay": "Existing snapshot verified without reinsertion",
+    "staging_replay": "Identical confirmed batch skipped",
+    "gold": {
+      "status": "SUCCESS",
+      "job_id": "assist365_gold_6ae5171322b743159c2ced59965e0d6b",
+      "rows": 45875,
+      "logical_bytes": 15212749,
+      "checks_passed": 24,
+      "content_fingerprint": "260909553606909619339"
+    }
+  },
+  "offline_tests": {
+    "status": "PASS",
+    "tests": 20
+  },
+  "cli_entrypoints": {
+    "status": "PASS",
+    "count": 11
+  },
+  "extractor_replay": {
+    "status": "PASS",
+    "api_client_blocked": true,
+    "checkpoint_rewritten": false
+  },
+  "sql_checks": [
+    {
+      "check": "staging_incremental",
+      "status": "PASS"
+    },
+    {
+      "check": "gold_functional",
+      "status": "PASS"
+    },
+    {
+      "check": "claim_flags",
+      "status": "PASS"
+    },
+    {
+      "check": "utc_boundary",
+      "status": "PASS"
+    },
+    {
+      "check": "analysis_country_plan",
+      "status": "PASS",
+      "result_rows": 216
+    },
+    {
+      "check": "analysis_country_channel",
+      "status": "PASS",
+      "result_rows": 72
+    },
+    {
+      "check": "looker_consumption",
+      "status": "PASS",
+      "processed_bytes": 1405616
+    }
+  ],
+  "sql_report_uri": "gs://a365-de-ignacio-assist365-data/pipeline/smoke-20260929/interview-20260930/sql_checks.json",
+  "scope_limits": [
+    "New live API extraction not executed; extraction verified with fixtures and existing completed checkpoint",
+    "Reuses delivered project and snapshot; does not test restoration of deleted tables or installation into another project",
+    "Cloud Run/Scheduler not deployed; recipient IAM access requires verification"
+  ]
+}

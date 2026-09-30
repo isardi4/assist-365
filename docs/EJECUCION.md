@@ -4,7 +4,7 @@
 
 Ejecutar desde la raíz del repositorio. Se necesita Python 3.10 o superior y Google Cloud CLI con `gcloud` y `bq` disponibles en PATH. Los scripts usan la biblioteca estándar de Python: no requieren paquetes pip, dbt ni un servidor MCP.
 
-La identidad debe tener permiso de crear jobs en el proyecto (`roles/bigquery.jobUser`) y leer staging/mart (`roles/bigquery.dataViewer` en esos datasets). Para reconstruir modelos también necesita escribir en staging/mart/control. La autenticación CLI usa credenciales locales de Google Cloud, nunca un archivo de credenciales incluido en Git.
+La identidad debe tener permiso de crear jobs en el proyecto (`roles/bigquery.jobUser`) y leer staging/mart (`roles/bigquery.dataViewer` en esos datasets). Para cargar y reconstruir el flujo necesita escritura en raw/staging/mart/control; `--setup` requiere además crear datasets y actualizar sus esquemas. La autenticación CLI usa credenciales locales de Google Cloud, nunca un archivo de credenciales incluido en Git.
 
 ```bash
 gcloud auth login
@@ -52,6 +52,8 @@ Ejecuta preparación, carga/validación raw, staging y gold en orden. No consult
 
 Para crear/reutilizar también datasets y esquemas, agregar `--setup`. Esta opción actualiza metadatos y demora más; el proyecto entregado ya tiene el entorno creado. Las evidencias de la ejecución se guardan en `gcs_root/pipeline/<run-id>/<ejecucion>/report.json`, además de las evidencias de cada capa.
 
+**Ensayo realizado el 30/09/2026:** el comando anterior terminó SUCCESS desde un clon limpio, sin `.local_data/` ni `EJERCICIO.md`. La creación/reutilización del entorno también se ejecutó por separado. Las pruebas offline y SQL y ambas consultas analíticas terminaron correctamente. [Reporte de verificación](evidence/ensayo_20260930.json).
+
 La ruta de referencia usa el snapshot disponible. La extracción completa para una **captura nueva** es un comando independiente, documentado en la parte 1; los cambios de código deben validarse primero con fixtures sin volver a descargar el millón de registros.
 
 ## Reconstruir desde archivos ya existentes
@@ -84,7 +86,6 @@ Pruebas Python offline, sin solicitudes a la API ni mutaciones BigQuery:
 ```bash
 python3 -m unittest discover -s scripts/bonus -p 'test_*.py'
 ```
-
 
 Las pruebas SQL usan tablas temporales y no descargan datos ni modifican las tablas productivas.
 

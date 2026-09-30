@@ -1,6 +1,6 @@
 # Assist-365 — pipeline y análisis de siniestralidad
 
-Solución del challenge de Data Engineering: cinco recursos de API conservados en GCS, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión. **Estado revisado al 30/09/2026:** flujo validado por CLI y dashboard disponible; consumo real del dashboard medido y automatización diaria pendiente.
+Solución del challenge de Data Engineering: cinco recursos de API conservados en GCS, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión. **Estado revisado al 30/09/2026:** flujo ejecutado desde un clon limpio con archivos en GCS, pruebas aprobadas y dashboard disponible; automatización diaria pendiente.
 
 **[Abrir el dashboard](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG)**. Inicia en abril–junio de 2026 y permite comparar países, planes y frecuencia/severidad, con filtros de país, producto y canal de agencia.
 
@@ -18,6 +18,8 @@ python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29
 ```
 
 Se detiene ante errores y conserva evidencia en GCS. `--setup` crea/reutiliza el entorno; no activa una descarga nueva ni una programación diaria. [Comandos individuales y pruebas](docs/EJECUCION.md).
+
+**Ensayo de entrega:** ejecutado desde un clon sin archivos de datos locales ni el Markdown del ejercicio. Preparación reutilizó GCS, raw verificó sus conteos sin duplicar el snapshot, staging reconoció el lote procesado y gold se reconstruyó correctamente. Pasaron 20 pruebas offline y las pruebas SQL de incrementales, gold, flags y fechas UTC; ambas queries analíticas devolvieron resultados. La extracción nueva se probó con fixtures, sin consultar la API. [Evidencia del ensayo](docs/evidence/ensayo_20260930.json).
 
 ## Arquitectura
 

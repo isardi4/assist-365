@@ -321,3 +321,13 @@ Siete pruebas unitarias verifican selección y errores de configuración sin red
 - SQL reproducible en parte_06_tablero/sql/001_medir_consumo.sql; evidencia con IDs, queries y metadatos en parte_06_tablero/evidence/consumo_20260930.json.
 - Sin cambios al dashboard publicado ni consultas a la API; filtros probados solo en la sesión aislada. No se ejecutaron nuevas cargas ni reglas de conciliación.
 - Interacciones por separado y sin caché BigQuery: CL. 7 jobs/1.440.024 bytes; ONLINE, 7 jobs/1.582.008 bytes; Equipaje Protegido, 6 jobs/1.305.208 bytes. Todas exitosas. Máximo observado 1,582008 MB (3,164016% de 50 MB).
+
+
+## Ensayo de entrevista desde clon limpio — 30/09/2026
+
+- Detectados y corregidos: import de emit en cliente API; import gzip del verificador; manejo de error_file ausente; preparación repetida que reemplazaba recibos; omisión de raw migrada sin comprobar destinos; extracción completa que reescribía el checkpoint. Perfil opcional actualizado para GCS.
+- Nuevo scripts/run_pipeline.py: preparación → carga/verificación raw → staging → gold; --setup opcional; corte explícito; falla ante primer error y escribe reporte cloud. Sin API.
+- Commit probado 5f6b5d7 desde /tmp/assist365-interview-final, sin .local_data ni EJERCICIO.md: 20 tests offline y 11 CLI --help PASS. Extractor reejecutado con cliente API bloqueado: checkpoint completo, cero solicitudes.
+- Entorno creado/reutilizado por CLI; pipeline completo SUCCESS entre 21:46:39 y 21:50:46 UTC. Raw verificó conteos, sin nuevos inserts; silver omitió lote idéntico; gold recompuesta, 45.875 filas/15.212.749 bytes, mismos importes y fingerprint 260909553606909619339. Reporte cloud en pipeline/smoke-20260929/40041073e6d041b486527e0f7dd323f0/report.json.
+- SQL incrementales, gold funcional, flags y frontera UTC PASS; análisis país/plan devolvió 216 filas y país/canal 72. Medición Looker reconsultada: PASS/1.405.616 bytes. Reporte cloud pipeline/smoke-20260929/interview-20260930/sql_checks.json.
+- Se mantienen 9 README, enlaces locales revisados. Documentación de entrega distingue reproducción del entorno existente de restauración/instalación en otro proyecto. IAM del evaluador y automatización diaria siguen pendientes; API nueva no ejecutada por prohibición vigente.
