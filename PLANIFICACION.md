@@ -9,7 +9,7 @@
 | Gold | Cohortes mensuales: 45.875 filas, 15,21 MB, 24 conciliaciones y 21 pruebas funcionales. |
 | Análisis | Dos queries independientes desde staging: país/plan y país/canal de agencia, por cohorte mensual de emisión. |
 | Operación diaria | Diseño documentado; Cloud Run/Scheduler y extracción delta no desplegados. |
-| Looker | Tablero creado, abre sin sesión en abril–junio de 2026; ratios visibles de países/planes conciliados. Acceso del destinatario pendiente; carga inicial medida: 1.405.616 bytes procesados en ocho jobs sin caché BigQuery. |
+| Looker | Tablero creado, abre sin sesión en abril–junio de 2026; ratios visibles de países/planes conciliados. Acceso de la cuenta de la empresa comprobado por IAM; carga inicial medida: 1.405.616 bytes procesados en ocho jobs sin caché BigQuery. |
 | Accesos | Token del challenge versionado en config/assist365.json por instrucción explícita; Google Cloud usa identidad CLI y no versiona credenciales. |
 
 La [guía de ejecución](docs/EJECUCION.md) permite ejecutar ambas queries desde un clon con acceso a BigQuery, sin token API ni archivos descargados. La [revisión general](docs/REVISION_PROYECTO.md) identifica límites de portabilidad, plan y tipo de producto, interpretación del ratio y pendientes de entrega. Los apartados de operación futura son diseño, no evidencia de despliegue.
@@ -353,3 +353,11 @@ La continuación anterior produjo progreso verificable: correcciones publicadas,
 | Bonus | Tests implementados; MCP/CI/video ausentes y declarados | Fuera del alcance priorizado |
 
 El despliegue diario, restauración en otro proyecto y delta/API son mejoras pendientes, no capacidades anunciadas. Para cerrar la validación de acceso del evaluador se pidió su identidad Google; no se conceden accesos ni se contacta a terceros sin una instrucción correspondiente. No se marca el objetivo completo mientras ese acceso permanezca sin verificar.
+
+
+## Verificación de acceso y auditoría final — 30/09/2026
+
+- El contacto de empresa figura en EJERCICIO.md. Consulta real get-iam-policy: roles/owner sin condición, etag BwZclg73nzY=. Los cuatro datasets tienen projectOwners/OWNER; bucket tiene projectOwner en legacyBucketOwner y legacyObjectOwner. No se cambió IAM ni se impersonó al contacto. Evidencia en docs/evidence/acceso_20260930.json. La consulta de identidad ya no es necesaria para esa cuenta.
+- Superado el pendiente de acceso señalado por la auditoría anterior. La comprobación acredita permisos concedidos, no una sesión interactiva del destinatario. Otras identidades deberán revisar sus permisos.
+- Requisitos principales del ejercicio cubiertos con la alternativa documentada de orquestación; snapshot completo, warehouse, modelo, análisis y tablero ejecutados; medición y ensayo publicados. Uso de IA documentado. Bonus tests entregado; MCP, CI y video opcionales no realizados.
+- Diseño diario, delta, restauración genérica y mantenimiento del tablero permanecen como mejoras declaradas. No son servicios activos ni se afirma su despliegue. Se conserva la prohibición de API nueva.

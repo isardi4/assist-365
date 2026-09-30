@@ -1,0 +1,42 @@
+{
+  "checked_on": "2026-09-30",
+  "project": "a365-de-ignacio",
+  "company_contact": "gbarrientos@assist-365.com",
+  "project_binding": {
+    "role": "roles/owner",
+    "condition": null,
+    "etag": "BwZclg73nzY="
+  },
+  "datasets": {
+    "assist365_raw": {
+      "specialGroup": "projectOwners",
+      "role": "OWNER",
+      "location": "us-central1"
+    },
+    "assist365_staging": {
+      "specialGroup": "projectOwners",
+      "role": "OWNER",
+      "location": "us-central1"
+    },
+    "assist365_mart": {
+      "specialGroup": "projectOwners",
+      "role": "OWNER",
+      "location": "us-central1"
+    },
+    "assist365_control": {
+      "specialGroup": "projectOwners",
+      "role": "OWNER",
+      "location": "us-central1"
+    }
+  },
+  "bucket": {
+    "uri": "gs://a365-de-ignacio-assist365-data",
+    "owner_group": "projectOwner:a365-de-ignacio",
+    "roles": [
+      "roles/storage.legacyBucketOwner",
+      "roles/storage.legacyObjectOwner"
+    ]
+  },
+  "verification": "Read-only project IAM, dataset ACL and bucket IAM inspection; no grants changed; no impersonation or login as company contact",
+  "dashboard": "Public access without session verified separately; see dashboard measurement evidence"
+}

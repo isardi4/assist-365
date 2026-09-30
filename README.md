@@ -131,7 +131,7 @@ El orden elegido fue **datos completos y trazables → reglas de negocio y calid
 | Prioridad | Pendiente | Criterio de cierre |
 |---|---|---|
 | Mantenimiento | Revalidar el consumo al cambiar datos, gráficos o rango temporal. | Repetir la medición de una carga aislada y sus filtros; la validación actual corresponde a la configuración y captura entregadas. |
-| Entrega | Confirmar acceso del evaluador al dashboard y al proyecto/bucket. | Verificar con la identidad destinataria; la apertura sin sesión ya fue comprobada. |
+| Accesos | Revisar permisos si se incorporan otros evaluadores. | La cuenta de la empresa indicada en el ejercicio es Owner del proyecto; los cuatro datasets y GCS reconocen a sus propietarios. Dashboard público. [Comprobación IAM](docs/evidence/acceso_20260930.json). |
 | Operación | Desplegar Cloud Run Job + Scheduler. | Ejecución diaria con identidad de servicio, etapas secuenciales y registro/alerta de fallas. El diseño está documentado. |
 | Portabilidad | Parametrizar proyecto/datasets y definir restauración y retención de artefactos. | Poder instalar en otro proyecto y recuperar un entorno vacío sin editar referencias ni depender de confirmaciones anteriores. |
 | Evolución | Extracción delta, CI, capa semántica y evolución del modelo. | Incorporar watermark para pólizas; automatizar pruebas; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
