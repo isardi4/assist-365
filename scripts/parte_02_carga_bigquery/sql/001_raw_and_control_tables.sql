@@ -1,3 +1,4 @@
+-- Crear las tablas raw y los controles operativos, sin reemplazar datos existentes.
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.polizas` (
   ingested_at TIMESTAMP,
   run_id STRING,
@@ -14,7 +15,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.polizas` (
 )
 PARTITION BY DATE(ingested_at)
 CLUSTER BY resource, run_id, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso polizas obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso polizas obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas."
+);
 
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.siniestros` (
@@ -33,7 +38,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.siniestros` (
 )
 PARTITION BY DATE(ingested_at)
 CLUSTER BY resource, run_id, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso siniestros obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso siniestros obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas."
+);
 
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.agencias` (
@@ -52,7 +61,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.agencias` (
 )
 PARTITION BY DATE(ingested_at)
 CLUSTER BY resource, run_id, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso agencias obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso agencias obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas."
+);
 
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.productos` (
@@ -71,7 +84,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.productos` (
 )
 PARTITION BY DATE(ingested_at)
 CLUSTER BY resource, run_id, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso productos obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso productos obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas."
+);
 
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.tipo_cambio` (
@@ -90,7 +107,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_raw.tipo_cambio` (
 )
 PARTITION BY DATE(ingested_at)
 CLUSTER BY resource, run_id, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso tipo_cambio obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery la representación raw de los registros del recurso tipo_cambio obtenidos de la API, junto con el contexto de extracción que permite rastrear cada elemento hasta su ejecución, lote, página y archivo local de origen. Se utiliza como fuente auditable para reprocesos, perfilado y modelos posteriores, manteniendo el payload completo sin limitarlo a columnas analíticas conocidas."
+);
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.ingestion_runs` (
   run_id STRING,
@@ -106,7 +127,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.ingestion_runs` (
 )
 PARTITION BY DATE(started_at)
 CLUSTER BY run_status, run_id
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla registra en BigQuery el ciclo de vida y el resultado operativo de cada ejecución de extracción. Permite medir solicitudes y reintentos, conocer los watermarks observados y consultar el resumen de procesamiento para demostrar qué se intentó cargar, detectar ejecuciones incompletas y comparar corridas sin depender de logs efímeros de la máquina.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla registra en BigQuery el ciclo de vida y el resultado operativo de cada ejecución de extracción. Permite medir solicitudes y reintentos, conocer los watermarks observados y consultar el resumen de procesamiento para demostrar qué se intentó cargar, detectar ejecuciones incompletas y comparar corridas sin depender de logs efímeros de la máquina."
+);
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.ingestion_errors` (
   created_at TIMESTAMP,
@@ -124,7 +149,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.ingestion_errors` 
 )
 PARTITION BY DATE(created_at)
 CLUSTER BY resource, run_id, error_class
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla centraliza en BigQuery los errores asociados a registros o etapas de extracción, con referencias para volver al recurso, lote, página, archivo y ejecución que los originó. Sirve como cola auditable de investigación y resolución: cada falla debe quedar identificada, clasificable y vinculada a su estado de tratamiento, evitando que errores individuales queden ocultos en un resultado agregado.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla centraliza en BigQuery los errores asociados a registros o etapas de extracción, con referencias para volver al recurso, lote, página, archivo y ejecución que los originó. Sirve como cola auditable de investigación y resolución: cada falla debe quedar identificada, clasificable y vinculada a su estado de tratamiento, evitando que errores individuales queden ocultos en un resultado agregado."
+);
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.reconciliations` (
   checked_at TIMESTAMP,
@@ -139,7 +168,11 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.reconciliations` (
 )
 PARTITION BY DATE(checked_at)
 CLUSTER BY resource, run_id, check_status
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla almacena en BigQuery los resultados de controles de integridad y reconciliación ejecutados sobre cada recurso y corrida. Sus conteos esperados, observados y diferencias permiten confirmar explícitamente si una extracción o proceso fue completo; el detalle JSON conserva evidencia diagnóstica para investigar discrepancias sin escanear nuevamente los datos de origen.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla almacena en BigQuery los resultados de controles de integridad y reconciliación ejecutados sobre cada recurso y corrida. Sus conteos esperados, observados y diferencias permiten confirmar explícitamente si una extracción o proceso fue completo; el detalle JSON conserva evidencia diagnóstica para investigar discrepancias sin escanear nuevamente los datos de origen."
+);
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.watermarks` (
   resource STRING,
@@ -149,7 +182,10 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.watermarks` (
   overlap_seconds INT64
 )
 CLUSTER BY resource
-OPTIONS (description = "Esta tabla mantiene en BigQuery el punto de avance confirmado por recurso para orientar las siguientes cargas incrementales. El watermark solo debe avanzar tras completar las validaciones de la corrida asociada; el margen de solapamiento facilita recuperar cambios tardíos y su historial permite auditar qué ejecución comprometió cada posición de lectura.");
+OPTIONS (
+  description
+  = "Esta tabla mantiene en BigQuery el punto de avance confirmado por recurso para orientar las siguientes cargas incrementales. El watermark solo debe avanzar tras completar las validaciones de la corrida asociada; el margen de solapamiento facilita recuperar cambios tardíos y su historial permite auditar qué ejecución comprometió cada posición de lectura."
+);
 
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.snapshot_diffs` (
   compared_at TIMESTAMP,
@@ -164,4 +200,8 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.snapshot_diffs` (
 )
 PARTITION BY DATE(compared_at)
 CLUSTER BY resource, change_type, source_key
-OPTIONS (require_partition_filter = TRUE, description = "Esta tabla conserva en BigQuery las diferencias calculadas entre snapshots sucesivos, incluyendo claves presentes, hashes comparados y estado de revisión. Se usa para detectar altas, modificaciones y posibles ausencias que requieren análisis; una ausencia no se interpreta automáticamente como baja y cada diferencia queda disponible para revisión y trazabilidad.");
+OPTIONS (
+  require_partition_filter = TRUE,
+  description
+  = "Esta tabla conserva en BigQuery las diferencias calculadas entre snapshots sucesivos, incluyendo claves presentes, hashes comparados y estado de revisión. Se usa para detectar altas, modificaciones y posibles ausencias que requieren análisis; una ausencia no se interpreta automáticamente como baja y cada diferencia queda disponible para revisión y trazabilidad."
+);

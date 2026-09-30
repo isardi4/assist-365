@@ -1,4 +1,4 @@
--- Retirar el layout anterior únicamente tras confirmar las seis tablas nuevas.
+-- Retirar tablas y vistas heredadas solo después de validar el nuevo staging.
 DROP VIEW IF EXISTS `a365-de-ignacio.assist365_staging.v_polizas_eventos_iniciales`;
 DROP VIEW IF EXISTS `a365-de-ignacio.assist365_staging.v_siniestros_iniciales`;
 DROP VIEW IF EXISTS `a365-de-ignacio.assist365_staging.v_tipo_cambio_inicial`;

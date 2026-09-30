@@ -366,3 +366,8 @@ El despliegue diario, restauración en otro proyecto y delta/API son mejoras pen
 ## Descripciones Python en español — 30/09/2026
 
 Revisadas las 142 funciones, métodos y clases del repositorio, incluidas funciones internas y pruebas. Se agregaron o tradujeron docstrings breves en español en 20 archivos, explicando su propósito y los controles relevantes. Verificación AST: misma lógica al quitar docstrings; ninguna definición sin descripción; sintaxis y diff válidos. Las 20 pruebas offline terminaron OK. No se ejecutaron API, cargas ni cambios en BigQuery/GCS.
+
+
+## Legibilidad de SQL — 30/09/2026
+
+Indentados los 26 archivos SQL y agregados comentarios breves en español. El incremental distingue lectura raw, tablas temporales, MERGE de historia/estado actual, catálogos/siniestros y controles finales. Verificada igualdad de tokens SQL y literales respecto del original; parser BigQuery sin errores en los 26 archivos; lector de descripción gold compatible. Sin llamadas API ni mutaciones de warehouse. El hash de versión SQL de silver cambia por el formato: la próxima corrida puede reaplicar el lote, conservando la idempotencia de sus MERGE. No se agregan dependencias de formato al repositorio.

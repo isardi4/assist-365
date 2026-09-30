@@ -1,44 +1,64 @@
+-- Crear la tabla mensual del dashboard con sus particiones y dimensiones.
 CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_mart.dashboard_diario` (
-  `date` DATE OPTIONS(description="Primer día del mes de emisión de la cohorte de pólizas."),
-  `year` INT64 OPTIONS(description="Año calendario de la fecha comercial del agregado."),
-  `month` INT64 OPTIONS(description="Mes calendario numérico de la fecha del agregado."),
-  `day` INT64 OPTIONS(description="Día del mes correspondiente a la fecha del agregado."),
-  `year_month` STRING OPTIONS(description="Año y mes calendario en formato AAAA-MM del agregado."),
-  `year_quarter` STRING OPTIONS(description="Año y trimestre calendario en formato AAAA-Qn."),
-  `year_semester` STRING OPTIONS(description="Año y semestre calendario en formato AAAA-Sn."),
-  `day_of_week` STRING OPTIONS(description="Nombre en español del día semanal de la fecha UTC."),
-  `pais` STRING OPTIONS(description="País de emisión de la póliza; desconocido si falta."),
-  `producto` STRING OPTIONS(description="Nombre del plan comercial obtenido del catálogo vigente."),
-  `es_premium` BOOL OPTIONS(description="Indica producto premium; nulo si falta el catálogo."),
-  `canal_origen` STRING OPTIONS(description="Canal comercial de origen de la póliza asociada."),
-  `polizas` INT64 OPTIONS(description="Pólizas no borradas ni anuladas por fecha de emisión."),
-  `polizas_con_prima_usd` INT64 OPTIONS(description="Pólizas elegibles con prima y conversión USD válidas."),
-  `prima_usd` NUMERIC OPTIONS(description="Suma USD conocida de última prima de pólizas elegibles."),
-  `siniestros` INT64 OPTIONS(description="Siniestros elegibles atribuidos a la cohorte de emisión."),
-  `siniestros_pagados` INT64 OPTIONS(description="Cantidad de siniestros elegibles cuyo estado actual es PAGADO."),
-  `siniestros_rechazados` INT64 OPTIONS(description="Cantidad de siniestros elegibles con estado actual RECHAZADO."),
-  `siniestros_en_analisis` INT64 OPTIONS(description="Cantidad de siniestros elegibles con estado actual EN_ANALISIS."),
-  `siniestros_otros_estados` INT64 OPTIONS(description="Cantidad de siniestros con estados distintos o nulos."),
-  `siniestros_pagados_con_costo_usd` INT64 OPTIONS(description="Siniestros PAGADO con monto y conversión USD válidos."),
-  `costo_pagado_usd` NUMERIC OPTIONS(description="Suma USD conocida de montos de siniestros PAGADO."),
-  `siniestros_sin_poliza` INT64 OPTIONS(description="Campo legado en cero; siniestros huérfanos fuera de gold."),
-  `siniestros_sin_periodo` INT64 OPTIONS(description="Siniestros sin coincidencia única de cobertura."),
-  `siniestros_pagados_sin_periodo` INT64 OPTIONS(description="Siniestros PAGADO sin coincidencia única de cobertura."),
-  `costo_pagado_sin_periodo_usd` NUMERIC OPTIONS(description="Costo USD conocido PAGADO sin período coincidente."),
-  `siniestros_poliza_anulada` INT64 OPTIONS(description="Campo legado en cero; pólizas anuladas fuera de gold."),
-  `siniestros_poliza_borrada` INT64 OPTIONS(description="Campo legado en cero; pólizas con baja D fuera de gold."),
-  `siniestros_pagados_con_periodo` INT64 OPTIONS(description="Siniestros PAGADO cuya ocurrencia coincide con cobertura."),
-  `siniestros_pagados_con_periodo_con_costo_usd` INT64 OPTIONS(description="PAGADO con cobertura coincidente y costo USD válido."),
-  `costo_pagado_con_periodo_usd` NUMERIC OPTIONS(description="Costo USD conocido PAGADO con cobertura coincidente."),
-  `siniestros_excluidos` INT64 OPTIONS(description="Siniestros conservados fuera de los conteos analíticos."),
-  `siniestros_pagados_excluidos` INT64 OPTIONS(description="Siniestros PAGADO excluidos de costo, frecuencia y severidad."),
-  `siniestros_moneda_inferida` INT64 OPTIONS(description="Siniestros elegibles con moneda inferida de su póliza."),
-  `siniestros_pagados_moneda_inferida` INT64 OPTIONS(description="Siniestros PAGADO elegibles con moneda de póliza inferida."),
-  `tipo_producto` STRING OPTIONS(description="Tipo del plan para comparar premium dentro de la misma categoría."),
-  `canal_agencia` STRING OPTIONS(description="Canal comercial del catálogo de la agencia de la póliza."))
-PARTITION BY DATE_TRUNC(`date`,MONTH)
-CLUSTER BY pais,producto,canal_origen
+  `date` DATE OPTIONS (description = "Primer día del mes de emisión de la cohorte de pólizas."),
+  `year` INT64 OPTIONS (description = "Año calendario de la fecha comercial del agregado."),
+  `month` INT64 OPTIONS (description = "Mes calendario numérico de la fecha del agregado."),
+  `day` INT64 OPTIONS (description = "Día del mes correspondiente a la fecha del agregado."),
+  `year_month` STRING OPTIONS (description = "Año y mes calendario en formato AAAA-MM del agregado."),
+  `year_quarter` STRING OPTIONS (description = "Año y trimestre calendario en formato AAAA-Qn."),
+  `year_semester` STRING OPTIONS (description = "Año y semestre calendario en formato AAAA-Sn."),
+  `day_of_week` STRING OPTIONS (description = "Nombre en español del día semanal de la fecha UTC."),
+  `pais` STRING OPTIONS (description = "País de emisión de la póliza; desconocido si falta."),
+  `producto` STRING OPTIONS (description = "Nombre del plan comercial obtenido del catálogo vigente."),
+  `es_premium` BOOL OPTIONS (description = "Indica producto premium; nulo si falta el catálogo."),
+  `canal_origen` STRING OPTIONS (description = "Canal comercial de origen de la póliza asociada."),
+  `polizas` INT64 OPTIONS (description = "Pólizas no borradas ni anuladas por fecha de emisión."),
+  `polizas_con_prima_usd` INT64 OPTIONS (description = "Pólizas elegibles con prima y conversión USD válidas."),
+  `prima_usd` NUMERIC OPTIONS (description = "Suma USD conocida de última prima de pólizas elegibles."),
+  `siniestros` INT64 OPTIONS (description = "Siniestros elegibles atribuidos a la cohorte de emisión."),
+  `siniestros_pagados` INT64 OPTIONS (description = "Cantidad de siniestros elegibles cuyo estado actual es PAGADO."),
+  `siniestros_rechazados` INT64 OPTIONS (description = "Cantidad de siniestros elegibles con estado actual RECHAZADO."),
+  `siniestros_en_analisis` INT64 OPTIONS (
+    description = "Cantidad de siniestros elegibles con estado actual EN_ANALISIS."
+  ),
+  `siniestros_otros_estados` INT64 OPTIONS (description = "Cantidad de siniestros con estados distintos o nulos."),
+  `siniestros_pagados_con_costo_usd` INT64 OPTIONS (
+    description = "Siniestros PAGADO con monto y conversión USD válidos."
+  ),
+  `costo_pagado_usd` NUMERIC OPTIONS (description = "Suma USD conocida de montos de siniestros PAGADO."),
+  `siniestros_sin_poliza` INT64 OPTIONS (description = "Campo legado en cero; siniestros huérfanos fuera de gold."),
+  `siniestros_sin_periodo` INT64 OPTIONS (description = "Siniestros sin coincidencia única de cobertura."),
+  `siniestros_pagados_sin_periodo` INT64 OPTIONS (
+    description = "Siniestros PAGADO sin coincidencia única de cobertura."
+  ),
+  `costo_pagado_sin_periodo_usd` NUMERIC OPTIONS (description = "Costo USD conocido PAGADO sin período coincidente."),
+  `siniestros_poliza_anulada` INT64 OPTIONS (description = "Campo legado en cero; pólizas anuladas fuera de gold."),
+  `siniestros_poliza_borrada` INT64 OPTIONS (description = "Campo legado en cero; pólizas con baja D fuera de gold."),
+  `siniestros_pagados_con_periodo` INT64 OPTIONS (
+    description = "Siniestros PAGADO cuya ocurrencia coincide con cobertura."
+  ),
+  `siniestros_pagados_con_periodo_con_costo_usd` INT64 OPTIONS (
+    description = "PAGADO con cobertura coincidente y costo USD válido."
+  ),
+  `costo_pagado_con_periodo_usd` NUMERIC OPTIONS (description = "Costo USD conocido PAGADO con cobertura coincidente."),
+  `siniestros_excluidos` INT64 OPTIONS (description = "Siniestros conservados fuera de los conteos analíticos."),
+  `siniestros_pagados_excluidos` INT64 OPTIONS (
+    description = "Siniestros PAGADO excluidos de costo, frecuencia y severidad."
+  ),
+  `siniestros_moneda_inferida` INT64 OPTIONS (description = "Siniestros elegibles con moneda inferida de su póliza."),
+  `siniestros_pagados_moneda_inferida` INT64 OPTIONS (
+    description = "Siniestros PAGADO elegibles con moneda de póliza inferida."
+  ),
+  `tipo_producto` STRING OPTIONS (description = "Tipo del plan para comparar premium dentro de la misma categoría."),
+  `canal_agencia` STRING OPTIONS (description = "Canal comercial del catálogo de la agencia de la póliza.")
+)
+PARTITION BY DATE_TRUNC(`date`, MONTH)
+CLUSTER BY pais, producto, canal_origen
 OPTIONS(description="Agregado físico mensual por cohorte de emisión, país, nombre de plan, premium y canales de origen y agencia. Prima y siniestros de pólizas no borradas ni anuladas pertenecen al mismo mes de emisión; costo PAGADO se convierte con FX de ocurrencia hasta el corte registrado en control. Conserva flags monetarios y métricas de cobertura. Las cohortes recientes pueden seguir acumulando siniestros y no representan prima devengada ni rentabilidad neta.");
 ALTER TABLE `a365-de-ignacio.assist365_mart.dashboard_diario`
- ADD COLUMN IF NOT EXISTS tipo_producto STRING OPTIONS(description="Tipo del plan para comparar premium dentro de la misma categoría."),
- ADD COLUMN IF NOT EXISTS canal_agencia STRING OPTIONS(description="Canal comercial del catálogo de la agencia de la póliza.");
+ADD COLUMN IF NOT EXISTS tipo_producto STRING OPTIONS (
+  description = "Tipo del plan para comparar premium dentro de la misma categoría."
+),
+ADD COLUMN IF NOT EXISTS canal_agencia STRING OPTIONS (
+  description = "Canal comercial del catálogo de la agencia de la póliza."
+);
