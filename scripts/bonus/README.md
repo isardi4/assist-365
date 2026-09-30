@@ -41,3 +41,5 @@ git diff --check
 ```
 
 El último comando revisa los cambios locales sin preparar; el CI compara los commits del push o del pull request. Las pruebas SQL permanecen manuales para conservar el CI independiente del acceso al proyecto cloud.
+
+Verificación publicada: [CI exitoso del 30/09/2026](https://github.com/isardi4/assist-365/actions/runs/36792623622), con veinte pruebas aprobadas en cada versión de Python, sintaxis y diff correctos.

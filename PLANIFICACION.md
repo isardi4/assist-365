@@ -398,3 +398,10 @@ Aclarada la anomalía FX en el README central: control del producto factor_usd×
 ## Skill semántica de análisis — 30/09/2026
 
 Creado SKILL.md en la raíz como artefacto de entrega, usando skill-creator. Incluye esquema/granos y relaciones, glosario breve, cuatro métricas, población/corte/FX, límites operativos y cinco preguntas naturales de ejemplo. Referencias al código y documentación; sin instalación global ni configuración de credenciales. Las herramientas MCP disponibles en esta sesión no incluyen consultas BigQuery. No se crean servidores ni se declara cumplida la ejecución de cinco preguntas vía MCP: Bonus 1 pasa a parcial. Sin consultas API ni nuevas cargas; README y bonus actualizan el alcance real.
+
+
+## CI offline — 30/09/2026
+
+Implementado .github/workflows/ci-offline.yml: push, pull_request y workflow_dispatch; Ubuntu y matriz Python 3.10/3.13, permisos contents:read. Valida diff del evento, sintaxis de scripts y 20 unittest existentes. Sin dependencias externas, credenciales cloud ni consultas a API/GCS/BigQuery; SQL permanece manual. Bonus README explica simulaciones, alcance y reproducción; README central acredita Bonus 3 implementado offline y revisión/guía de ejecución actualizadas. Se conservan nueve README.
+
+Verificación local: 20 pruebas PASS, compileall y diff correctos. Commit eedc95e publicado; ejecución real https://github.com/isardi4/assist-365/actions/runs/36792623622 SUCCESS en ambos jobs (Python 3.10/3.13), todos los pasos aprobados. Sin cambios en scripts de negocio ni datos.
