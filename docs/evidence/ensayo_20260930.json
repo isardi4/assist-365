@@ -73,5 +73,30 @@
     "New live API extraction not executed; extraction verified with fixtures and existing completed checkpoint",
     "Reuses delivered project and snapshot; does not test restoration of deleted tables or installation into another project",
     "Cloud Run/Scheduler not deployed; recipient IAM access requires verification"
-  ]
+  ],
+  "latest_code_rehearsal": {
+    "tested_commit": "713111b",
+    "started_at": "2026-09-30T22:43:26Z",
+    "finished_at": "2026-09-30T22:49:53Z",
+    "duration_seconds": 387,
+    "status": "SUCCESS",
+    "source_api_calls": 0,
+    "report_uri": "gs://a365-de-ignacio-assist365-data/pipeline/smoke-20260929/6e1a7d91e6c042ee90bfb0af61ffd374/report.json",
+    "staging_job_id": "assist365_silver_38756c91fdc74596956ac508d8bf7910",
+    "staging_rows": {
+      "agencias": 300,
+      "polizas": 1003461,
+      "polizas_activas": 780000,
+      "productos": 12,
+      "siniestros": 138133,
+      "tipo_cambio": 5124
+    },
+    "gold_job_id": "assist365_gold_b2ea0ea77f9a404b81e178d06a4b7cbd",
+    "gold_rows": 45875,
+    "gold_logical_bytes": 15212749,
+    "gold_checks_passed": 24,
+    "content_fingerprint": "260909553606909619339",
+    "staging_replay": "SQL version changed; batch reapplied with identical resulting counts",
+    "gold_table_size_gate_removed": true
+  }
 }

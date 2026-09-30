@@ -376,3 +376,12 @@ Indentados los 26 archivos SQL y agregados comentarios breves en español. El in
 ## Límite gold y mapa de archivos Parte 3 — 30/09/2026
 
 Retirado por solicitud el bloqueo por tamaño total de gold: ASSERT SQL de 50 MB, estimación logical_bytes_upper_bound y assert numBytes del ejecutor. La réplica de transformación en pruebas se ajustó igualmente; se conserva el registro de tamaño real, conciliaciones y presupuesto de consulta. El requisito de 50 MB se verifica con bytes procesados de jobs reales de Looker, no con tamaño de tabla. README Parte 3 actualizado: 20 SQL descritos individualmente, orden gold 000→002→001→003, diagnósticos/migraciones separados del flujo habitual y ejecutores/esquemas documentados. Enlaces locales y cobertura de SQL válidos; 21 pruebas funcionales gold y 24 controles de producción PASS en tablas temporales. No se reconstruyó el mart ni se consultó la API.
+
+
+## Guía de corrida nueva y ensayo final para entrevista — 30/09/2026
+
+README central incorpora Guía de Uso con primera ejecución, repetición, captura nueva y comprobaciones. docs/EJECUCION.md añade comandos encadenados extractor --full → run_pipeline con RUN_ID único compartido y corte UTC, más recuperación con mismo identificador. La carga desde raw antecede a staging; ABM por MERGE, snapshot raw append, gold reemplazada. CLI --help y enlaces/anclas locales verificados sin API.
+
+Ensayo sobre commit 713111b: pipeline SUCCESS 22:43:26–22:49:53 UTC (6 min 27 s). Silver reaplicó por nueva versión SQL: 1.003.461 eventos, 780.000 actuales, 138.133 siniestros y catálogos iguales. Gold SUCCESS, 24 controles, 45.875 filas/15.212.749 bytes y fingerprint 260909553606909619339 sin cambios. Evidencia pipeline/smoke-20260929/6e1a7d91e6c042ee90bfb0af61ffd374/report.json; anexo al reporte de ensayo existente. Cero llamadas API nuevas.
+
+El ejercicio indica vencimiento del acceso del proyecto 02/10/2026 02:35 UTC (01/10 23:35 Argentina). Se preguntó la fecha de entrevista para confirmar vigencia; no se asume disponibilidad después ni se contacta a la empresa. Para una demostración corta, reutilizar snapshot. Captura API nueva documentada, no ejecutada.

@@ -26,7 +26,7 @@ Repetir un `run_id` completo verifica su checkpoint y termina sin llamadas ni ca
 
 El snapshot `smoke-20260929` conserva **1.147.859 registros** y fue conciliado en [raw](../parte_02_carga_bigquery/README.md). Las variaciones de nombres y valores no finitos se preservan; su interpretación se resuelve en staging, según la [documentación de anomalías](../../README.md#anomalías-y-tratamiento).
 
-`api/` contiene el cliente HTTP y `extractor/` implementa paginación y persistencia. [Requisitos y reproducción](../../docs/EJECUCION.md).
+`api/` contiene el cliente HTTP y `extractor/` implementa paginación y persistencia. [Requisitos y reproducción](../../docs/EJECUCION.md). [Captura nueva y carga completa hasta gold](../../docs/EJECUCION.md#captura-nueva-api--gcs--raw--staging--gold).
 
 `ASSIST365_API_TOKEN` permite reemplazar el valor configurado y `ASSIST365_CONFIG_FILE` seleccionar otro JSON. El Markdown del ejercicio no se lee durante la ejecución. Este token solo autentica la API; BigQuery y GCS utilizan la identidad de Google Cloud CLI. `gcs_root` define el bucket y `ASSIST365_GCS_ROOT` permite sustituirlo. Las páginas se publican directamente en GCS; no se necesita un directorio local persistente.
 

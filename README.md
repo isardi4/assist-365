@@ -21,6 +21,18 @@ Se detiene ante errores y conserva evidencia en GCS. `--setup` crea/reutiliza el
 
 **Ensayo de entrega:** ejecutado desde un clon sin archivos de datos locales ni el Markdown del ejercicio. Preparación reutilizó GCS, raw verificó sus conteos sin duplicar el snapshot, staging reconoció el lote procesado y gold se reconstruyó correctamente. Pasaron 20 pruebas offline y las pruebas SQL de incrementales, gold, flags y fechas UTC; ambas queries analíticas devolvieron resultados. La extracción nueva se probó con fixtures, sin consultar la API. [Evidencia del ensayo](docs/evidence/ensayo_20260930.json).
 
+## Guía de Uso
+
+Ejecutar desde la raíz del repositorio, con Python 3.10+, Google Cloud CLI y acceso al proyecto/bucket entregados.
+
+1. **Preparar la terminal:** `gcloud auth login`, `gcloud config set project a365-de-ignacio` y `bq version`. Ejecutar también `python3 -m unittest discover -s scripts/bonus -p 'test_*.py'` para verificar las pruebas offline.
+2. **Primera ejecución con la captura entregada:** `python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29 --setup`. Crea/reutiliza el entorno y procesa GCS → raw → staging → gold.
+3. **Repetición o demostración:** ejecutar el mismo comando sin `--setup`. Raw verifica el lote ya cargado; staging omite la versión confirmada o la reaplica si cambió el SQL; gold se reconstruye. Los MERGE conservan la unicidad de las entidades.
+4. **Captura nueva, primera vez o al día siguiente:** seguir los [dos comandos API → pipeline](docs/EJECUCION.md#captura-nueva-api--gcs--raw--staging--gold). Asignar un identificador nuevo, descargar con `--full` y usar el mismo identificador en `run_pipeline`. Raw agrega el snapshot; staging aplica los cambios; gold reemplaza su agregado. Para reanudar una falla se conserva el identificador.
+5. **Revisar la ejecución:** comprobar `pipeline_finished` con `SUCCESS`, consultar el estado de staging y el inventario de gold, ejecutar las [dos queries analíticas](docs/EJECUCION.md#camino-rápido-análisis-desde-staging) y abrir el dashboard. [Comandos de verificación y recuperación](docs/EJECUCION.md#captura-nueva-api--gcs--raw--staging--gold).
+
+La guía reproduce el proyecto entregado; la instalación en otro proyecto y la restauración de tablas eliminadas requieren adaptación. El acceso del challenge tiene vencimiento indicado en el ejercicio: **02/10/2026, 02:35 UTC (01/10, 23:35 de Argentina)**. Una demostración posterior requiere confirmar la continuidad de ese acceso.
+
 ## Arquitectura
 
 `API → gzip y checkpoints en GCS → raw → staging → mart → Looker Studio`
