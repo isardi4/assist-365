@@ -331,3 +331,25 @@ Siete pruebas unitarias verifican selección y errores de configuración sin red
 - Entorno creado/reutilizado por CLI; pipeline completo SUCCESS entre 21:46:39 y 21:50:46 UTC. Raw verificó conteos, sin nuevos inserts; silver omitió lote idéntico; gold recompuesta, 45.875 filas/15.212.749 bytes, mismos importes y fingerprint 260909553606909619339. Reporte cloud en pipeline/smoke-20260929/40041073e6d041b486527e0f7dd323f0/report.json.
 - SQL incrementales, gold funcional, flags y frontera UTC PASS; análisis país/plan devolvió 216 filas y país/canal 72. Medición Looker reconsultada: PASS/1.405.616 bytes. Reporte cloud pipeline/smoke-20260929/interview-20260930/sql_checks.json.
 - Se mantienen 9 README, enlaces locales revisados. Documentación de entrega distingue reproducción del entorno existente de restauración/instalación en otro proyecto. IAM del evaluador y automatización diaria siguen pendientes; API nueva no ejecutada por prohibición vigente.
+
+
+## Auditoría del objetivo contra EJERCICIO.md — cierre de alcance
+
+La continuación anterior produjo progreso verificable: correcciones publicadas, ensayo real desde clon y evidencia SUCCESS. El ejercicio permite diseño documentado en lugar de despliegue de orquestación; los cuatro bonus son opcionales. No se cambia la prohibición de consultas nuevas a la API.
+
+| Requisito | Evidencia actual | Dictamen |
+|---|---|---|
+| 1. Extracción completa, paginación y errores | Captura smoke-20260929 en GCS, 1.285 páginas/1.147.859 registros; cliente con 429/5xx, backoff y checkpoints; fixture CLI cursor/offset PASS | Implementado; no se revalida disponibilidad de API en vivo |
+| 2. Raw y elección de método | Cinco tablas raw; manifiestos/checksums GCS; verificación real PASS y explicación de bq load en Parte 2 | Verificado |
+| 3. Modelo dimensional y granos | Seis tablas staging, catálogo y FX; grano explícito en Parte 3; SQL incremental/flags PASS | Verificado |
+| 4. Orquestación o diseño README, segunda corrida | CLI única ejecutada; Parte 4 con calendario, identidades, bloqueo, etapas, alertas y segunda corrida | Diseño entregado bajo alternativa explícita; no desplegado |
+| 5. Siniestralidad USD e insight | Dos queries staging ejecutadas: 216/72 filas; resultados trimestrales en Parte 5 | Verificado |
+| 6. Una página, preguntas, BigQuery, <50 MB | Tablero/captura, cuatro gráficos; ocho jobs etiquetados reales, 1.405.616 bytes; medición SQL reconsultada PASS | Verificado para configuración/captura entregadas |
+| 7. Arquitectura, decisiones, anomalías y mejoras | Nueve README, guía y evidencia; enlaces locales válidos | Verificado |
+| Explicar uso de IA | Parte 7: contexto, instrucciones resumidas y forma de contrastar resultados | Documentado sin historial sensible |
+| Entrega Git | main publicado, 1012588 antes de este cierre | Publicado; publicar también cambios de auditoría |
+| Entrega dashboard compartido | Enlace público ya abierto sin sesión y captura/medición reales | Acceso público comprobado; identidad destinataria no informada |
+| Entrega GCP consultable por empresa | Tablas/jobs/queries ejecutadas en proyecto asignado | Activo; falta comprobar IAM de la identidad evaluadora |
+| Bonus | Tests implementados; MCP/CI/video ausentes y declarados | Fuera del alcance priorizado |
+
+El despliegue diario, restauración en otro proyecto y delta/API son mejoras pendientes, no capacidades anunciadas. Para cerrar la validación de acceso del evaluador se pidió su identidad Google; no se conceden accesos ni se contacta a terceros sin una instrucción correspondiente. No se marca el objetivo completo mientras ese acceso permanezca sin verificar.
