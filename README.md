@@ -173,7 +173,7 @@ La facturación registró **83.886.080 bytes (83,89 MB)** por los mínimos por c
 | **7. README** | Implementado | Arquitectura, ejecución, decisiones, anomalías, resultados y límites por capa. |
 | **Bonus 1. Capa semántica y MCP** | Parcial | [SKILL.md](SKILL.md) con tablas, glosario, métricas, reglas y cinco preguntas de ejemplo. Faltan las cinco ejecuciones verificadas vía MCP. |
 | **Bonus 2. Tests de datos** | Implementado en SQL | Conciliaciones y pruebas con tablas temporales para I/U/D, transacciones, flags y agregación. Se usó SQL nativo sin sumar otro framework. |
-| **Bonus 3. GitHub Actions** | No implementado | Pruebas ejecutables manualmente; CI quedó fuera para concentrar tiempo en validar el warehouse. |
+| **Bonus 3. GitHub Actions** | Implementado (offline) | Push/PR y ejecución manual: sintaxis Python, diff y 20 pruebas en Python 3.10/3.13. SQL y warehouse se validan por separado. [Detalle](scripts/bonus/README.md#ci-offline-con-github-actions). |
 | **Bonus 4. Video** | No realizado | La entrega se explica mediante código, documentación y dashboard; se priorizaron resultados reproducibles. |
 
 El orden elegido fue **datos completos y trazables → reglas de negocio y calidad → métricas verificadas → dashboard**. Las anomalías de moneda, negativos y cobertura podían distorsionar las respuestas comerciales; resolver su tratamiento tuvo prioridad sobre despliegue diario y bonus. Se reutilizó la captura disponible para desarrollar el modelo y el análisis sin repetir consultas a la API.
@@ -186,7 +186,7 @@ El orden elegido fue **datos completos y trazables → reglas de negocio y calid
 | Accesos | Revisar permisos si se incorporan otros evaluadores. | La cuenta de la empresa indicada en el ejercicio es Owner del proyecto; los cuatro datasets y GCS reconocen a sus propietarios. Dashboard público. [Comprobación IAM](docs/evidence/acceso_20260930.json). |
 | Operación | Desplegar Cloud Run Job + Scheduler. | Ejecución diaria con identidad de servicio, etapas secuenciales y registro/alerta de fallas. El diseño está documentado. |
 | Portabilidad | Parametrizar proyecto/datasets y definir restauración y retención de artefactos. | Poder instalar en otro proyecto y recuperar un entorno vacío sin editar referencias ni depender de confirmaciones anteriores. |
-| Evolución | Extracción delta, CI, validación MCP y evolución del modelo. | Incorporar watermark para pólizas; automatizar pruebas; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
+| Evolución | Extracción delta, validación MCP y evolución del modelo. | Incorporar watermark para pólizas; automatizar validaciones cloud; resolver negativos/cobertura con la fuente y evaluar historia dimensional y exposición. |
 
 El [diseño de orquestación](scripts/parte_04_orquestacion/README.md) detalla el alcance cloud. El video y los bonus no implementados permanecen fuera de la entrega actual.
 

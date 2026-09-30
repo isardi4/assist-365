@@ -31,6 +31,6 @@ El 30/09/2026, sobre el commit `5f6b5d7`, finalizaron preparación, verificació
 - Fechas futuras de origen se reportan y se evitan mediante el período explícito; no se corrigen silenciosamente. El catálogo representa el estado disponible, sin historia dimensional para atribuir cambios pasados de agencia/producto.
 ## Mejoras posteriores
 
-Parametrizar proyecto y datasets; desplegar identidad de servicio; integrar métricas y alertas diarias; decidir FX contractual ante factores no recíprocos; resolver negativos/cobertura con la fuente; incorporar historia dimensional y exposición para análisis actuarial. La skill semántica está entregada; faltan cinco ejecuciones verificadas vía MCP. CI y video no están implementados.
+Parametrizar proyecto y datasets; desplegar identidad de servicio; integrar métricas y alertas diarias; decidir FX contractual ante factores no recíprocos; resolver negativos/cobertura con la fuente; incorporar historia dimensional y exposición para análisis actuarial. La skill semántica está entregada; faltan cinco ejecuciones verificadas vía MCP. El CI offline está implementado en GitHub Actions; las validaciones SQL siguen siendo manuales. El video no está implementado.
 
 Gold incorpora nombre de plan, tipo de producto y canal de agencia con grano mensual. Las queries de análisis sirven como referencia para conciliar meses de emisión completos con el mismo corte. Los campos heredados de siniestros de pólizas D/ANULADA/ausentes quedan en cero; la exclusión de población se registra en control.

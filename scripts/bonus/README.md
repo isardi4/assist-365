@@ -12,12 +12,32 @@ Se implementaron pruebas en SQL nativo de BigQuery y conciliaciones en los ejecu
 | [Almacenamiento y replay](test_gcs_pipeline.py) | Once pruebas de integridad, checkpoints, preparación repetida, destino migrado y verificación sin errores de origen. |
 | Conciliaciones | 29 controles raw, 13 staging y 24 gold para comprobar las publicaciones. |
 
-[Requisitos y comandos para ejecutarlas](../../docs/EJECUCION.md#validaciones). Las pruebas SQL se ejecutan manualmente; para configuración API usar `python3 -m unittest scripts.bonus.test_api_token`. No hay workflow de GitHub Actions.
+[Requisitos y comandos para ejecutarlas](../../docs/EJECUCION.md#validaciones). Las pruebas SQL se ejecutan manualmente en BigQuery; las veinte pruebas Python se ejecutan automáticamente en el CI offline.
 
-Se entrega una [skill de análisis](../../SKILL.md) con glosario, tablas/granos, métricas, reglas de población/FX y cinco preguntas de ejemplo. Para usarla, indicar al asistente que lea `SKILL.md` y consulte BigQuery con esas definiciones. El archivo está versionado en el repositorio; su instalación y conexión dependen del entorno del asistente. **El bonus semántico está parcial:** las cinco preguntas todavía no tienen ejecuciones verificadas vía MCP. Una ejecución con `bq` no acredita ese requisito. CI y video no se implementaron.
+Se entrega una [skill de análisis](../../SKILL.md) con glosario, tablas/granos, métricas, reglas de población/FX y cinco preguntas de ejemplo. Para usarla, indicar al asistente que lea `SKILL.md` y consulte BigQuery con esas definiciones. El archivo está versionado en el repositorio; su instalación y conexión dependen del entorno del asistente. **El bonus semántico está parcial:** las cinco preguntas todavía no tienen ejecuciones verificadas vía MCP. Una ejecución con `bq` no acredita ese requisito. El video no está implementado.
 
-Las pruebas offline de almacenamiento cubren páginas/checkpoints en GCS, recuperación sin API, conflictos de generación, integridad de preparación, ledger de errores, URI de carga y omisión de snapshots ya migrados:
+## Qué prueban los archivos Python
+
+Cada test construye un escenario conocido, ejecuta código del proyecto y compara el resultado con lo esperado. Si una modificación rompe ese comportamiento, la prueba falla y el comando termina con error.
+
+- `test_api_token.py`: comprueba cómo se selecciona y valida el token, con configuraciones temporales y valores ficticios.
+- `test_extractor.py`: simula respuestas paginadas de la API y verifica extracción, gzip y repetición de una captura completa sin volver a consultar la fuente.
+- `test_gcs_pipeline.py`: usa un almacenamiento en memoria y llamadas BigQuery simuladas para verificar checkpoints, integridad, recuperación y cargas repetidas. Por ejemplo, rechaza sobrescribir un checkpoint con una generación desactualizada.
+
+No descargan datos reales ni requieren credenciales Google, token API, paquetes externos o conexión a esos servicios. Verifican el comportamiento del código ante casos controlados; la disponibilidad de la fuente y los resultados del warehouse se comprueban mediante las validaciones SQL y los ensayos de ejecución documentados.
+
+## CI offline con GitHub Actions
+
+El [workflow](../../.github/workflows/ci-offline.yml) corre en cada push y pull request, y permite ejecución manual desde [Actions → CI offline](https://github.com/isardi4/assist-365/actions/workflows/ci-offline.yml) → **Run workflow**. En Ubuntu, con Python 3.10 y 3.13, valida el diff (espacios sobrantes y errores de whitespace), compila los scripts para detectar errores de sintaxis y ejecuta las veinte pruebas. No ejecuta el pipeline, consultas SQL ni llamadas a la API/GCS/BigQuery.
+
+En Actions, abrir una ejecución y luego cada job para ver las pruebas y su resultado. Un job rojo indica un error que debe corregirse; un job verde confirma estos controles offline. Esto no configura una restricción de merge en GitHub.
+
+Para reproducir los controles desde la raíz, con Python 3.10 o superior:
 
 ```bash
-python3 -m unittest discover -s scripts/bonus -p 'test_*.py'
+python3 -m compileall -q scripts
+python3 -m unittest discover -s scripts/bonus -p 'test_*.py' -v
+git diff --check
 ```
+
+El último comando revisa los cambios locales sin preparar; el CI compara los commits del push o del pull request. Las pruebas SQL permanecen manuales para conservar el CI independiente del acceso al proyecto cloud.

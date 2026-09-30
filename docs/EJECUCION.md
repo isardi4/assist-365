@@ -127,8 +127,12 @@ Para una captura **nueva**, preparar primero sus páginas en GCS con `python3 -m
 Pruebas Python offline, sin solicitudes a la API ni mutaciones BigQuery:
 
 ```bash
-python3 -m unittest discover -s scripts/bonus -p 'test_*.py'
+python3 -m compileall -q scripts
+python3 -m unittest discover -s scripts/bonus -p 'test_*.py' -v
+git diff --check
 ```
+
+Estos controles también corren en GitHub Actions con Python 3.10 y 3.13 en cada push/PR. [Qué verifica el CI y cómo ejecutarlo manualmente](../scripts/bonus/README.md#ci-offline-con-github-actions). No requieren acceso cloud.
 
 Las pruebas SQL usan tablas temporales y no descargan datos ni modifican las tablas productivas.
 
