@@ -12,7 +12,7 @@ python3 -m scripts.parte_01_extraccion.run --full --run-id <nuevo-run-id>
 
 `--full` solicita el snapshot completo. Sin esa opción, el valor predeterminado es **una página por recurso**, adecuado para una prueba acotada. El cliente espera al menos un segundo entre solicitudes y permite hasta seis reintentos por solicitud.
 
-Repetir un `run_id` reanuda sus checkpoints; una captura nueva requiere otro identificador. El extractor obtiene snapshots: no implementa delta por `updated_since`. La reconstrucción desde archivos existentes y el análisis en BigQuery no necesitan repetir la extracción.
+Repetir un `run_id` completo verifica su checkpoint y termina sin llamadas ni cambios al manifiesto. Si está incompleto, reanuda sus checkpoints; una captura nueva requiere otro identificador. El extractor obtiene snapshots: no implementa delta por `updated_since`. La reconstrucción desde archivos existentes y el análisis en BigQuery no necesitan repetir la extracción.
 
 ## Datos de referencia
 
@@ -29,3 +29,5 @@ El snapshot `smoke-20260929` conserva **1.147.859 registros** y fue conciliado e
 `api/` contiene el cliente HTTP y `extractor/` implementa paginación y persistencia. [Requisitos y reproducción](../../docs/EJECUCION.md).
 
 `ASSIST365_API_TOKEN` permite reemplazar el valor configurado y `ASSIST365_CONFIG_FILE` seleccionar otro JSON. El Markdown del ejercicio no se lee durante la ejecución. Este token solo autentica la API; BigQuery y GCS utilizan la identidad de Google Cloud CLI. `gcs_root` define el bucket y `ASSIST365_GCS_ROOT` permite sustituirlo. Las páginas se publican directamente en GCS; no se necesita un directorio local persistente.
+
+Las pruebas offline cubren el comando completo con fixtures de cursor/offset y respuestas gzip. No prueban disponibilidad actual de la API; la captura de referencia es la extracción real previa. Ejecutar con `python3 -m unittest scripts.bonus.test_extractor`.

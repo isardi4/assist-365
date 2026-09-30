@@ -72,11 +72,14 @@ def main() -> int:
         run_dir = (args.output_dir or artifact_path(gcs_root()) / "raw") / run_id
         manifest_path = run_dir / "manifest.json"
         error_path = run_dir / "errors.jsonl"
+        manifest = load_or_create_manifest(manifest_path, run_id, run_dir, args.selected)
+        if all(manifest['resources'][name]['complete'] for name in args.selected):
+            emit('extractor_checkpoint_already_complete', run_id=run_id, output_dir=str(run_dir))
+            return 0 if all(s['complete'] for s in manifest['resources'].values()) else 2
         token = read_token()
         client = ApiClient(token, args.min_interval_seconds, args.timeout_seconds, args.max_retries)
         del token
         run_dir.mkdir(parents=True, exist_ok=True)
-        manifest = load_or_create_manifest(manifest_path, run_id, run_dir, args.selected)
         manifest["run_status"] = "RUNNING"
         manifest["full_extraction"] = args.full
         manifest["max_pages_per_resource"] = args.page_limit
@@ -126,8 +129,8 @@ def main() -> int:
                 save_manifest(manifest_path, manifest)
                 emit("resource_failed", run_id=run_id, resource=resource,
                      error_class=type(exc).__name__, message=str(exc)[:250])
-        manifest["http_requests"] = client.request_count
-        manifest["http_retries"] = client.retry_count
+        manifest["http_requests"] = manifest.get('http_requests', 0) + client.request_count
+        manifest["http_retries"] = manifest.get('http_retries', 0) + client.retry_count
         finalize_run(manifest_path, manifest)
         return 1 if failures else (0 if manifest["run_status"] == "SUCCESS" else 2)
     except Exception as exc:

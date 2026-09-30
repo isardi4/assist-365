@@ -39,9 +39,24 @@ bq --project_id=a365-de-ignacio --location=us-central1 query \
 
 Los resultados se agrupan por mes de emisión (`mes_cohorte`). Desde/hasta seleccionan pólizas; los siniestros posteriores se incluyen hasta `fecha_corte`. Los SQL referencian el proyecto del challenge; cambiar el proyecto requiere cambiar sus referencias. El límite de consulta no representa el límite por carga de Looker.
 
+## Ejecutar el flujo completo
+
+Desde un clon con acceso al proyecto y al bucket, ejecutar:
+
+```bash
+python3 -m scripts.run_pipeline \
+  --run-id smoke-20260929 --fecha-corte 2026-09-29
+```
+
+Ejecuta preparación, carga/validación raw, staging y gold en orden. No consulta la API, no necesita `.local_data/` ni `EJERCICIO.md`, reutiliza artefactos ya preparados y se detiene ante el primer error. La preparación repetida conserva manifiestos y recibos; si cambió una captura con el mismo identificador, falla para evitar reemplazar un lote cargado. El lote migrado solo se omite después de verificar sus archivos y conteos reales en raw. Gold se reconstruye, manteniendo su mismo grano y criterio comercial.
+
+Para crear/reutilizar también datasets y esquemas, agregar `--setup`. Esta opción actualiza metadatos y demora más; el proyecto entregado ya tiene el entorno creado. Las evidencias de la ejecución se guardan en `gcs_root/pipeline/<run-id>/<ejecucion>/report.json`, además de las evidencias de cada capa.
+
+La ruta de referencia usa el snapshot disponible. La extracción completa para una **captura nueva** es un comando independiente, documentado en la parte 1; los cambios de código deben validarse primero con fixtures sin volver a descargar el millón de registros.
+
 ## Reconstruir desde archivos ya existentes
 
-El snapshot `smoke-20260929` está disponible en `gs://a365-de-ignacio-assist365-data`. Con permisos de lectura del bucket, un clon puede reutilizarlo sin archivos locales ni nuevas consultas a la API. El proyecto entregado ya lo tiene cargado: el manifiesto conserva esa confirmación y evita duplicarlo. No volver a preparar un lote ya cargado; reutilizar su manifiesto.
+El snapshot `smoke-20260929` está disponible en `gs://a365-de-ignacio-assist365-data`. Con permisos de lectura del bucket, un clon puede reutilizarlo sin archivos locales ni nuevas consultas a la API. El proyecto entregado ya lo tiene cargado: el manifiesto conserva esa confirmación y evita duplicarlo. Repetir preparación ahora reutiliza su manifiesto tras validar los artefactos; no lo reemplaza.
 
 ```bash
 python3 -m scripts.parte_02_carga_bigquery.create_datasets --location us-central1
@@ -63,6 +78,13 @@ Ejecutar los comandos en orden y detenerse ante un código de salida distinto de
 Para una captura **nueva**, preparar primero sus páginas en GCS con `python3 -m scripts.parte_02_carga_bigquery.prepare_load gs://a365-de-ignacio-assist365-data/raw/<nuevo-run-id>`. El destino predeterminado es `gcs_root/bigquery-load/<nuevo-run-id>/`. La preparación usa temporales efímeros para comprimir NDJSON, los elimina tras publicarlos y no requiere archivos locales persistentes. BigQuery carga directamente las URI GCS. `--output-dir` permite seleccionar otro prefijo.
 
 ## Validaciones
+
+Pruebas Python offline, sin solicitudes a la API ni mutaciones BigQuery:
+
+```bash
+python3 -m unittest discover -s scripts/bonus -p 'test_*.py'
+```
+
 
 Las pruebas SQL usan tablas temporales y no descargan datos ni modifican las tablas productivas.
 

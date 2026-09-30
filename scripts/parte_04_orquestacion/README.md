@@ -1,6 +1,6 @@
 # Operación del pipeline
 
-El flujo entregado se ejecuta por CLI: **archivos verificados → raw → staging → gold**. Conserva controles y evidencias por corrida. Los [comandos de ejecución](../../docs/EJECUCION.md) permiten reconstruirlo desde un snapshot disponible; los análisis consumen BigQuery sin consultar la API.
+El flujo entregado se ejecuta con `python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29`: **archivos verificados → raw → staging → gold**. Conserva controles y evidencias por corrida y se detiene ante el primer error; `--setup` crea/reutiliza el entorno. Los [comandos de ejecución](../../docs/EJECUCION.md) permiten reconstruirlo desde un snapshot disponible; los análisis consumen BigQuery sin consultar la API.
 
 ## Repetición y recuperación
 

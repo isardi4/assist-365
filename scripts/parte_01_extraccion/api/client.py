@@ -14,7 +14,8 @@ import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
-from .common import BASE_URL, ExtractionError, emit, ssl_context
+from .common import BASE_URL, ssl_context
+from scripts.shared.common import ExtractionError, emit
 
 
 RETRYABLE_HTTP = {429, 500, 502, 503, 504}

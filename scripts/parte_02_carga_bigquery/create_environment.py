@@ -1,4 +1,4 @@
-"""Create the three Assist-365 datasets and raw/control tables in one location."""
+"""Create the four Assist-365 datasets and raw/control tables in one location."""
 
 from __future__ import annotations
 
@@ -105,7 +105,7 @@ def create_environment(location: str) -> None:
         SCHEMA_DIR.joinpath("table_descriptions.json").read_text(encoding="utf-8")
     )
     for index, (table, schema_file) in enumerate(TABLE_SCHEMAS.items()):
-        # BigQuery limits rapid metadata updates; pace the six small schema patches.
+        # BigQuery limits rapid metadata updates; pace the schema patches.
         if index:
             time.sleep(2.2)
         dataset = "assist365_raw" if table in {"polizas", "siniestros", "agencias", "productos", "tipo_cambio"} else "assist365_control"
@@ -126,7 +126,7 @@ def parse_args() -> argparse.Namespace:
     """Parse the required, explicit BigQuery location for resource creation."""
     parser = argparse.ArgumentParser(description="Crear el entorno BigQuery de Assist-365.")
     parser.add_argument("--location", required=True,
-                        help="Ubicación fija de los tres datasets, por ejemplo US.")
+                        help="Ubicación fija de los cuatro datasets, por ejemplo US.")
     return parser.parse_args()
 
 

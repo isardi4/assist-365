@@ -1,4 +1,4 @@
-"""Profile a completed local raw run without connecting to cloud services."""
+"""Profile a completed raw run from GCS or an explicit local path."""
 
 from __future__ import annotations
 
@@ -15,16 +15,17 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from scripts.shared.common import ExtractionError, emit
+from scripts.shared.artifacts import artifact_path, gcs_root
 
 
 def load_manifest(run_dir: Path) -> dict[str, Any]:
     """Load a raw manifest and require a completed run before profiling it."""
     path = run_dir / "manifest.json"
     if not path.is_file():
-        raise ExtractionError(f"No existe el manifiesto local: {path}")
+        raise ExtractionError(f"No existe el manifiesto de origen: {path}")
     manifest = json.loads(path.read_text(encoding="utf-8"))
     if manifest.get("run_status") not in {"SUCCESS", "SUCCESS_WITH_QUARANTINE"}:
-        raise ExtractionError("El perfil requiere una corrida local completa.")
+        raise ExtractionError("El perfil requiere una corrida completa.")
     return manifest
 
 
@@ -423,20 +424,20 @@ def profile_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     """Parse local raw-run and optional profile-output paths."""
-    parser = argparse.ArgumentParser(description="Profile local raw files without cloud access.")
-    parser.add_argument("run_dir", type=Path, help="Local directory containing manifest.json")
-    parser.add_argument("--output", type=Path,
-                        help="Profile JSON path; defaults under .local_data/assist365/profiles/")
+    parser = argparse.ArgumentParser(description="Profile verified raw files from GCS or a local directory.")
+    parser.add_argument("run_dir", type=artifact_path, help="GCS prefix or local directory containing manifest.json")
+    parser.add_argument("--output", type=artifact_path,
+                        help="Profile JSON path; defaults under gcs_root/profiles/")
     return parser.parse_args()
 
 
 def main() -> int:
-    """Create a local-only profile after validating the raw page files."""
+    """Create a source profile after validating the raw page files."""
     args = parse_args()
     try:
         manifest = load_manifest(args.run_dir)
         profile = profile_run(args.run_dir, manifest)
-        output = args.output or Path(".local_data/assist365/profiles") / manifest["run_id"] / "data_profile.json"
+        output = args.output or artifact_path(gcs_root()) / "profiles" / manifest["run_id"] / "data_profile.json"
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(profile, ensure_ascii=False, indent=2) + "\n",
                           encoding="utf-8")

@@ -7,9 +7,17 @@ Solución del challenge de Data Engineering: cinco recursos de API conservados e
 ## Acceso y ejecución
 
 - **Consultar resultados:** abrir el dashboard o ejecutar las [dos queries de análisis](scripts/parte_05_analisis/README.md) con acceso a BigQuery. No requieren token API ni archivos locales.
-- **Reejecutar el flujo:** seguir la [guía de ejecución](docs/EJECUCION.md). El snapshot `smoke-20260929` está en GCS; las cargas y los modelos no necesitan consultar nuevamente la API. Su manifiesto conserva la confirmación de carga y evita insertarlo otra vez en raw.
+- **Reejecutar el flujo:** seguir la [guía de ejecución](docs/EJECUCION.md). El snapshot `smoke-20260929` está en GCS; las cargas y los modelos no necesitan consultar nuevamente la API. Su manifiesto conserva la confirmación de carga; se comprueban archivos y conteos antes de omitirlo.
 - **Entorno:** Python 3.10+, Google Cloud CLI y permisos en `a365-de-ignacio`, región `us-central1`. No requiere dependencias pip. Clonar el repositorio no concede permisos: la identidad debe poder leer GCS y crear jobs BigQuery; para ejecutar cargas/modelos también necesita escritura en sus destinos. Los scripts y SQL están vinculados al proyecto entregado.
 - **API:** el token del challenge está incluido en [config/assist365.json](config/assist365.json) y el extractor lo lee automáticamente. Las credenciales de Google Cloud se obtienen con `gcloud auth login`, no desde ese archivo.
+
+Para ejecutar las capas desde GCS con un único comando:
+
+```bash
+python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29
+```
+
+Se detiene ante errores y conserva evidencia en GCS. `--setup` crea/reutiliza el entorno; no activa una descarga nueva ni una programación diaria. [Comandos individuales y pruebas](docs/EJECUCION.md).
 
 ## Arquitectura
 
@@ -29,7 +37,7 @@ La captura de referencia es del **29/09/2026**. Sus archivos están en `gs://a36
 | Etapa | Comportamiento implementado |
 |---|---|
 | Extracción | Una captura nueva descarga el snapshot completo. Repetir `run_id` reanuda páginas/checkpoints en GCS. El parámetro API `updated_since` todavía no está integrado. |
-| Raw | Carga NDJSON gzip mediante URI GCS y valida integridad antes de enviar archivos. Reutiliza jobs confirmados mientras BigQuery conserve su historial; el snapshot de referencia tiene además una confirmación de migración en su manifiesto. |
+| Raw | Carga NDJSON gzip mediante URI GCS y valida integridad antes de enviar archivos. Reutiliza jobs confirmados mientras BigQuery conserve su historial; el snapshot de referencia verifica archivos y conteos antes de omitir la migración confirmada. |
 | Staging | MERGE transaccional para I/U/D, eventos tardíos y correcciones; checkpoints por lote y versión SQL. Lotes idénticos confirmados se omiten. Los catálogos se procesan como snapshots completos. |
 | Gold | Reconstrucción del agregado para un corte explícito después de staging, con validación antes de publicar. |
 
@@ -86,7 +94,7 @@ Las dos queries desde staging responden por **mes de emisión, país/plan** y **
 
 El [análisis completo](scripts/parte_05_analisis/README.md) incluye los tres trimestres y los componentes del ratio. Premium/no premium está disponible en gold; no se presenta una conclusión específica validada sobre esa comparación.
 
-La evidencia incluye **29 comprobaciones raw, 13 staging y 24 gold**, más 21 pruebas funcionales gold, ocho pruebas de flags y 14 pruebas offline de configuración/almacenamiento. Las comprobaciones raw son cinco por recurso —filas, páginas, posiciones duplicadas, metadatos y marcadores no finitos—, una de inventario de páginas y tres de tablas de control. Son un conjunto fijo de controles: cada ejecución registra sus resultados, sin implicar nuevas cargas de datos. Staging también se ejecutó correctamente desde el manifiesto GCS, conservando los conteos indicados. [Pruebas y comandos](scripts/bonus/README.md).
+La evidencia incluye **29 comprobaciones raw, 13 staging y 24 gold**, más 21 pruebas funcionales gold, ocho pruebas de flags y 20 pruebas offline de configuración, extracción y almacenamiento. Las comprobaciones raw son cinco por recurso —filas, páginas, posiciones duplicadas, metadatos y marcadores no finitos—, una de inventario de páginas y tres de tablas de control. Son un conjunto fijo de controles: cada ejecución registra sus resultados, sin implicar nuevas cargas de datos. Staging también se ejecutó correctamente desde el manifiesto GCS, conservando los conteos indicados. [Pruebas y comandos](scripts/bonus/README.md).
 
 El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden seguir acumulando costo. El flujo se ejecuta por CLI con snapshots y cargas raw→staging incrementales.
 

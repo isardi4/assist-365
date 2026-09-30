@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import subprocess
@@ -25,12 +26,12 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
     for key, column in [('resources', 'ingested_at'), ('run_file', 'started_at'),
                         ('error_file', 'created_at'), ('reconciliation_file', 'checked_at')]:
         dates = set()
-        artifacts = manifest[key] if key == 'resources' else [manifest[key]]
+        artifacts = manifest[key] if key == 'resources' else [manifest[key]] if manifest.get(key) else []
         for artifact in artifacts:
             with open_gzip(artifact['load_file'], 'rt') as source:
                 for line in source:
                     dates.add(json.loads(line)[column][:10])
-        day_bounds[key] = (min(dates), max(dates))
+        day_bounds[key] = (min(dates), max(dates)) if dates else ('1970-01-01', '1970-01-01')
 
     def predicate(key: str, column: str) -> str:
         """Limit reads to the source partitions and the requested run."""
@@ -106,7 +107,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
     controls = {r['kind']: int(r['row_count']) for r in actual if r['kind'] != 'page'}
     for key, table in [('run_file', 'ingestion_runs'), ('error_file', 'ingestion_errors'),
                        ('reconciliation_file', 'reconciliations')]:
-        artifact = manifest[key]
+        artifact = manifest.get(key) or {}
         check('all', 'bigquery_' + table + '_rows', artifact.get('rows', artifact.get('errors', 0)), controls[table])
     path = folder / 'reconciliations.ndjson.gz'
     atomic_write(path, gzip.compress((''.join(json.dumps(r) + '\n' for r in checks)).encode(), mtime=0))

@@ -127,13 +127,72 @@ class GCSPipelineTests(unittest.TestCase):
         receipt = json.loads(source.with_name(source.name + '.bigquery-job.json').read_text())
         self.assertEqual(receipt['identity']['table'], 'productos')
 
+    def migrated(self):
+        self.page()
+        path = prepare_run(self.run, artifact_path('gs://test-bucket/bigquery-load'))
+        manifest = json.loads(path.read_text())
+        manifest['remote_resource_migration'] = {
+            'project': 'a365-de-ignacio', 'location': 'us-central1',
+            'job_id': 'existing', 'status': 'PASS'}
+        path.write_text(json.dumps(manifest))
+        return path, manifest
+
     def test_migrated_snapshot_is_not_loaded_again(self):
-        path = self.run / 'load_manifest.json'
-        path.write_text(json.dumps({'run_id': 'test-run', 'remote_resource_migration': {
-            'project': 'a365-de-ignacio', 'location': 'us-central1', 'job_id': 'existing'}}))
-        with patch('scripts.parte_02_carga_bigquery.load_bigquery.bq_load') as load:
+        path, manifest = self.migrated()
+        counts = [{'resource': r['resource'], 'row_count': r['rows']} for r in manifest['resources']]
+        with patch('scripts.parte_02_carga_bigquery.load_bigquery.bq_load') as load, \
+             patch('scripts.parte_02_carga_bigquery.load_bigquery.shutil.which', return_value='bq'), \
+             patch('scripts.parte_02_carga_bigquery.load_bigquery.subprocess.run',
+                   return_value=SimpleNamespace(returncode=0, stdout=json.dumps(counts))):
             load_run(path, 'us-central1')
         load.assert_not_called()
+
+    def test_migration_confirmation_rejects_missing_destination_rows(self):
+        path, _ = self.migrated()
+        with patch('scripts.parte_02_carga_bigquery.load_bigquery.shutil.which', return_value='bq'), \
+             patch('scripts.parte_02_carga_bigquery.load_bigquery.subprocess.run',
+                   return_value=SimpleNamespace(returncode=0, stdout='[]')):
+            with self.assertRaisesRegex(ExtractionError, 'no coincide'):
+                load_run(path, 'us-central1')
+
+    def test_preparation_reuses_manifest_without_overwriting_receipts(self):
+        path, _ = self.migrated()
+        before = self.backend.objects.copy()
+        reused = prepare_run(self.run, artifact_path('gs://test-bucket/bigquery-load'))
+        self.assertEqual(str(path), str(reused))
+        self.assertEqual(self.backend.objects, before)
+
+    def test_preparation_rejects_changed_source_with_same_run_id(self):
+        _, _ = self.migrated()
+        path = self.run / 'manifest.json'
+        source = json.loads(path.read_text())
+        source['resources']['productos']['pages'][0]['response_sha256'] = 'changed'
+        path.write_text(json.dumps(source))
+        before = self.backend.objects.copy()
+        with self.assertRaisesRegex(ExtractionError, 'Cambió la captura'):
+            prepare_run(self.run, artifact_path('gs://test-bucket/bigquery-load'))
+        self.assertEqual(self.backend.objects, before)
+
+    def test_raw_verifier_publishes_gzip_report_without_an_error_ledger(self):
+        from scripts.parte_02_carga_bigquery.verify_raw import verify_raw
+        self.page()
+        path = prepare_run(self.run, artifact_path('gs://test-bucket/bigquery-load'))
+        manifest = json.loads(path.read_text())
+        records = [{'kind': 'page', 'resource': 'productos', 'page_number': 1,
+                    'row_count': 1, 'positions': 1, 'invalid_metadata': 0, 'markers': 0}]
+        records += [{'kind': name, 'row_count': count} for name,count in [
+            ('ingestion_runs', 1), ('ingestion_errors', 0),
+            ('reconciliations', manifest['reconciliation_file']['rows'])]]
+        def command(args, **kwargs):
+            output = '{}' if 'show' in args else '' if '--dry_run' in args else json.dumps(records)
+            return SimpleNamespace(returncode=0, stdout=output, stderr='')
+        with patch('scripts.parte_02_carga_bigquery.verify_raw.subprocess.run', side_effect=command), \
+             patch('scripts.parte_02_carga_bigquery.verify_raw.bq_load'):
+            verify_raw(path, 'a365-de-ignacio', 'us-central1', 1024**3)
+        folder = path.parent / 'remote-verification'
+        report = json.loads((folder / 'report.json').read_text())
+        self.assertEqual(report['status'], 'PASS')
+        self.assertEqual(len(gzip.decompress((folder / 'reconciliations.ndjson.gz').read_bytes()).splitlines()), 29)
 
 
 if __name__ == '__main__':

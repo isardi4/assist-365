@@ -93,10 +93,6 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
     """Load one fully prepared run sequentially, once per resource file."""
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     migration = manifest.get("remote_resource_migration")
-    if migration and migration.get("project") == project_id and migration.get("location") == location:
-        emit("bigquery_run_already_migrated", run_id=manifest.get("run_id"),
-             migration_job_id=migration["job_id"])
-        return
     if manifest.get("source_run_status") not in {"SUCCESS", "SUCCESS_WITH_QUARANTINE"}:
         raise ExtractionError("Se rechaza cargar un run parcial o fallido.")
     if not manifest.get("resources"):
@@ -112,6 +108,31 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
             artifacts.append(manifest[key])
     for artifact in artifacts:
         verify_prepared_file(artifact_path(artifact["load_file"]), artifact)
+
+    if migration and migration.get('project') == project_id and migration.get('location') == location:
+        if migration.get('status') != 'PASS':
+            raise ExtractionError('La migración del lote no está confirmada como PASS.')
+        if not all(r['resource'] in RAW_RESOURCES for r in manifest['resources']):
+            raise ExtractionError('El manifiesto contiene recursos desconocidos.')
+        sql = ' UNION ALL '.join(
+            f"SELECT '{r['resource']}' AS resource, COUNT(*) AS row_count "
+            f"FROM `{project_id}.{RAW_DATASET}.{r['resource']}` "
+            "WHERE DATE(ingested_at)>=DATE '1970-01-01' AND run_id=@run_id"
+            for r in manifest['resources'])
+        result = subprocess.run([
+            'bq', f'--project_id={project_id}', f'--location={location}', 'query',
+            '--use_legacy_sql=false', '--format=json', '--maximum_bytes_billed=1073741824',
+            f"--parameter=run_id:STRING:{manifest['run_id']}", sql,
+        ], capture_output=True, text=True)
+        if result.returncode:
+            raise ExtractionError('No se pudo comprobar el lote migrado en raw; revisar tablas y permisos.')
+        expected = {r['resource']: r['rows'] for r in manifest['resources']}
+        actual = {r['resource']: int(r['row_count']) for r in json.loads(result.stdout)}
+        if actual != expected:
+            raise ExtractionError('El lote confirmado no coincide con raw; detener y revisar la recuperación.')
+        emit('bigquery_run_already_migrated', run_id=manifest['run_id'],
+             migration_job_id=migration['job_id'], destination_counts_verified=True)
+        return
 
     for resource in manifest["resources"]:
         source = artifact_path(resource["load_file"])

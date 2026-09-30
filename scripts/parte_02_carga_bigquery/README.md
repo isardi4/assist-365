@@ -18,11 +18,11 @@ python3 -m scripts.parte_02_carga_bigquery.verify_raw \
   --location us-central1 --maximum-bytes-billed 1073741824
 ```
 
-Estos comandos corresponden a un lote nuevo. Para `smoke-20260929`, reutilizar el `load_manifest.json` existente y omitir preparación: el snapshot ya cargado conserva sus confirmaciones. Ejecutar en orden y detenerse ante una salida no exitosa. [Permisos y requisitos](../../docs/EJECUCION.md).
+Estos comandos corresponden a un lote nuevo. Para `smoke-20260929`, reutilizar el `load_manifest.json` existente: preparación comprueba y reutiliza los archivos sin reemplazar confirmaciones. El cargador verifica los conteos del lote migrado antes de omitirlo. Ejecutar en orden y detenerse ante una salida no exitosa. [Permisos y requisitos](../../docs/EJECUCION.md).
 
 ## Integridad y reintentos
 
-Preparación valida checksum y cantidad de filas de cada página; carga valida todos los artefactos antes del primer envío. Los jobs se identifican por destino, archivo y esquema. Los recibos en GCS permiten reutilizar una carga terminada sin errores y con destino correcto mientras BigQuery conserve su historial; esto no constituye deduplicación permanente de raw.
+Preparación valida checksum y cantidad de filas de cada página; carga valida todos los artefactos antes del primer envío. Los jobs se identifican por destino, archivo y esquema. Si un lote ya preparado tiene páginas diferentes, preparación falla y exige otro run_id/destino; no reemplaza un manifiesto publicado. Los recibos en GCS permiten reutilizar una carga terminada sin errores y con destino correcto mientras BigQuery conserve su historial; esto no constituye deduplicación permanente de raw.
 
 Los valores no finitos se codifican con un marcador explícito, por ejemplo `{"__non_finite_number__":"NaN"}`, y se registran en control. No se descartan filas ni se reemplazan valores comerciales. La interpretación monetaria pertenece a staging.
 

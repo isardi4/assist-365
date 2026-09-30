@@ -279,6 +279,26 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
         raise ExtractionError("El manifiesto no contiene un run_id válido.")
 
     output_run = output_dir / run_id
+    existing_path = output_run / 'load_manifest.json'
+    if existing_path.exists():
+        existing = json.loads(existing_path.read_text())
+        if existing.get('run_id') != run_id or existing.get('source_run_status') != status:
+            raise ExtractionError('La preparación existente corresponde a otra captura o estado.')
+        actual = {r['resource']: (r['rows'], r['pages']) for r in existing['resources']}
+        expected = {name: (state['rows_received'], [
+            {'page_number': p['page_number'], 'rows': p['rows_received'],
+             'response_sha256': p['response_sha256']} for p in state['pages']
+        ]) for name, state in manifest['resources'].items()}
+        if actual != expected:
+            raise ExtractionError('Cambió la captura de un run_id ya preparado; usar otro run_id/destino.')
+        from .load_bigquery import verify_prepared_file
+        artifacts = list(existing['resources'])
+        artifacts += [existing[key] for key in ('run_file', 'reconciliation_file', 'error_file')
+                      if existing.get(key)]
+        for item in artifacts:
+            verify_prepared_file(artifact_path(item['load_file']), item)
+        emit('bigquery_preparation_reused', run_id=run_id, output_dir=str(output_run))
+        return existing_path
     resource_results: list[dict[str, Any]] = []
     reconciliation_rows: list[dict[str, Any]] = []
     data_quality_errors: list[dict[str, Any]] = []
