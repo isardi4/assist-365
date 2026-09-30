@@ -54,6 +54,8 @@ La **prima media USD** es `SUM(prima_usd) / SUM(polizas)`. La relación `siniest
 
 Siniestralidad y frecuencia se muestran como **porcentajes** con dos decimales; severidad, como **USD por evento**. El ratio `0,3817` representa `38,17%`, sin multiplicar por 100 en la fórmula.
 
+[Glosario, fundamento de frecuencia/severidad y ejemplo numérico](../../README.md#glosario-y-fundamento-de-las-métricas).
+
 ## Ejemplo de lectura — abril–junio de 2026
 
 Los [resultados de las dos queries de análisis](../parte_05_analisis/README.md#ejemplo-de-análisis-tres-trimestres-de-emisión) dan ejemplos para el mismo período y corte:

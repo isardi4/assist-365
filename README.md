@@ -79,6 +79,46 @@ La ejecución es manual por CLI: no hay un servicio diario programado. La guía 
 
 Se dividen sumas, sin promediar ratios; un denominador cero significa indicador sin valor. Los siniestros se agrupan por póliza antes del join para sumar la prima una vez y conservar pólizas sin eventos. Gold se particiona por mes de `date` y se clusteriza por país, plan y canal de origen. Se reconstruye después de staging, validando el agregado antes de publicarlo. [Ejecución del modelo](scripts/parte_03_modelo_bigquery/README.md#construcción-gold).
 
+## Glosario y fundamento de las métricas
+
+Las métricas separan **cuántos eventos generan costo**, **cuánto cuesta cada evento** y **cuánta prima respalda ese costo**. Se calculan para la misma población de pólizas elegibles y el mismo corte, contando cada siniestro una vez.
+
+**Frecuencia pagada = siniestros PAGADO con costo USD válido / pólizas elegibles.** Se divide por todas las pólizas de la población, incluidas las que no tuvieron eventos, para comparar carteras de distinto tamaño. Contar eventos sin ese denominador confundiría volumen de ventas con incidencia; dividir solo por pólizas con siniestro quitaría del análisis a quienes no generaron costo. Es una frecuencia operativa por póliza: no ajusta duración de viaje ni días de cobertura observados. Una evolución actuarial debería incorporar esa exposición.
+
+**Severidad USD = costo PAGADO válido en USD / cantidad de esos mismos siniestros.** Mide el costo medio por evento. Dividir por pólizas daría costo por póliza, una medida diferente; incluir eventos pendientes o rechazados en el denominador diluiría el promedio de los pagados. Es un promedio observado: no estima el costo futuro ni describe por sí solo los casos extremos.
+
+Se eligió **PAGADO** para mantener costo y conteo sobre los mismos eventos con estado de pago informado. Los demás estados permanecen disponibles y tienen conteos separados, pero este indicador no representa toda la obligación pendiente. La inferencia monetaria válida se incluye; negativos y casos no resolubles se excluyen de costo y conteo.
+
+La distinción entre exposición para frecuencia y cantidad de eventos para severidad es consistente con el [material de modelos de tarifas de la Casualty Actuarial Society, página 27](https://www.casact.org/sites/default/files/2022-07/RP4_RateModels.pdf#page=27). Aquí se adopta expresamente la póliza como unidad operativa de exposición.
+
+**Ejemplo ilustrativo, no resultado del dataset:** 1.000 pólizas, 100 siniestros pagados válidos, USD 50.000 de costo y USD 200.000 de prima.
+
+| Indicador | Resultado | Lectura |
+|---|---|---|
+| Frecuencia | 100 / 1.000 = 0,10 | 10 eventos pagados cada 100 pólizas; no significa 10% de pólizas afectadas. |
+| Severidad | 50.000 / 100 = USD 500 | Costo promedio de cada evento pagado. |
+| Prima media | 200.000 / 1.000 = USD 200 | Prima promedio por póliza de la población. |
+| Siniestralidad | 50.000 / 200.000 = 25% | El costo pagado representa un cuarto de la prima informada. |
+
+Con denominadores distintos de cero, **siniestralidad = frecuencia × severidad / prima media**: `0,10 × 500 / 200 = 25%`. Por eso un ratio alto puede venir de más eventos, eventos más caros o una prima baja. No prueba causalidad ni margen neto. Una frecuencia puede superar 100% si hay varios eventos por póliza; si no hay eventos, frecuencia es cero y severidad queda sin valor. Siempre se dividen sumas al agregar meses/países, para conservar la ponderación por pólizas o eventos.
+
+| Término | Definición aplicada |
+|---|---|
+| Prima | Importe de la póliza, usando su último estado disponible. No es el monto a pagar ante un siniestro ni prueba de cobro. |
+| Siniestro | Evento identificado por `siniestro_id`; una póliza puede tener varios. |
+| Costo pagado | Monto del evento con estado PAGADO y validez monetaria. No se reconstruyen pagos por fecha porque no hay fecha/historia de pago. |
+| Siniestralidad operativa | Costo pagado USD dividido por prima USD. Usa prima informada, sin devengar, y no incluye gastos ni reservas pendientes. |
+| Póliza elegible | Último estado no D ni ANULADA. Incluye pólizas vencidas; elegibilidad analítica no equivale a cobertura vigente hoy. |
+| Cohorte de emisión | Pólizas emitidas en el mismo mes, junto con sus siniestros posteriores observados hasta el corte. |
+| Vigencia | Intervalo de cobertura de la póliza; se usa para clasificar coincidencia, no para asignar la cohorte. |
+| Corte y maduración | Corte limita ocurrencias incluidas. Maduración es el tiempo de observación de la cohorte; cohortes recientes pueden acumular más costo. |
+| Exposición | Base sobre la que ocurren eventos. Aquí se cuenta una unidad por póliza, sin ajustar días de viaje o cobertura. |
+| Prima devengada y margen | Devengada es la prima atribuida a la cobertura ya transcurrida. Margen requiere además gastos y otras obligaciones; ninguno se calcula aquí. |
+| Grano | Qué representa una fila: un evento en el historial, una póliza actual, un siniestro o un grupo mensual en gold. |
+| ABM / I-U-D e idempotencia | Alta, modificación y baja según la fuente. Idempotencia permite repetir un lote sin duplicar entidades ni revertir estados más recientes. |
+
+Las fechas de FX y las exclusiones se fundamentan en [decisiones del modelo](#decisiones-del-modelo) y [anomalías](#anomalías-y-tratamiento). Las fórmulas para Looker están en la [guía del tablero](scripts/parte_06_tablero/README.md#indicadores).
+
 ## Anomalías y tratamiento
 
 Cantidades de staging completo al corte de referencia; las categorías pueden superponerse.

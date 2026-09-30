@@ -49,6 +49,8 @@ Los siniestros se agrupan por póliza antes del LEFT JOIN. `detalle_poliza` cons
 
 USD usa factor 1; otras monedas, la última cotización positiva anterior o igual a la fecha. Inferidos válidos incluidos y negativos/no resolubles excluidos; la cobertura se clasifica aparte. [Fundamentos de calidad](../../README.md#anomalías-y-tratamiento). Canal de agencia proviene del catálogo, no del canal de origen de la póliza.
 
+[Glosario, fundamento de frecuencia/severidad y ejemplo numérico](../../README.md#glosario-y-fundamento-de-las-métricas).
+
 ## Interpretación y límites
 
 **Las cohortes recientes tienen menor maduración:** pueden acumular eventos o pagos. Una siniestralidad baja no demuestra mejora definitiva; comparar tiempos de desarrollo similares.

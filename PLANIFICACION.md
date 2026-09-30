@@ -385,3 +385,8 @@ README central incorpora Guía de Uso con primera ejecución, repetición, captu
 Ensayo sobre commit 713111b: pipeline SUCCESS 22:43:26–22:49:53 UTC (6 min 27 s). Silver reaplicó por nueva versión SQL: 1.003.461 eventos, 780.000 actuales, 138.133 siniestros y catálogos iguales. Gold SUCCESS, 24 controles, 45.875 filas/15.212.749 bytes y fingerprint 260909553606909619339 sin cambios. Evidencia pipeline/smoke-20260929/6e1a7d91e6c042ee90bfb0af61ffd374/report.json; anexo al reporte de ensayo existente. Cero llamadas API nuevas.
 
 El ejercicio indica vencimiento del acceso del proyecto 02/10/2026 02:35 UTC (01/10 23:35 Argentina). Se preguntó la fecha de entrevista para confirmar vigencia; no se asume disponibilidad después ni se contacta a la empresa. Para una demostración corta, reutilizar snapshot. Captura API nueva documentada, no ejecutada.
+
+
+## Fundamentos y glosario para entrega — 30/09/2026
+
+README central amplía frecuencia/severidad con elección de denominadores, población PAGADO común, proxy por póliza sin ajustar duración y promedio observado. Ejemplo ficticio 1.000 pólizas/100 eventos/USD 50.000 costo/USD 200.000 prima; identidad frecuencia×severidad/prima media con denominadores válidos. Glosario compacto: prima, siniestro, costo, elegibilidad, cohorte/vigencia/corte/maduración, exposición, devengada/margen, grano e idempotencia. Referencia CAS confirma distinción exposición/eventos; no se presenta el indicador como frecuencia actuarial anual ni probabilidad de pólizas afectadas. Partes 5 y 6 enlazan a definiciones únicas; fórmulas y datos sin cambios.
