@@ -15,7 +15,7 @@ from .load_bigquery import PROJECT_ID, RAW_DATASET, CONTROL_DATASET, SCHEMA_DIR,
 
 
 def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: int) -> None:
-    """Check every page, technical position, JSON marker and control-file row count."""
+    """Compara raw con el manifiesto y guarda los resultados de los controles del lote."""
     manifest = json.loads(manifest_path.read_text())
     run_id = manifest['run_id']
     # Parameters and identifiers are validated before constructing SQL.
@@ -34,7 +34,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
         day_bounds[key] = (min(dates), max(dates)) if dates else ('1970-01-01', '1970-01-01')
 
     def predicate(key: str, column: str) -> str:
-        """Limit reads to the source partitions and the requested run."""
+        """Restringe la consulta a las particiones y al identificador de la corrida."""
         first, last = day_bounds[key]
         return f"DATE({column}) BETWEEN '{first}' AND '{last}' AND run_id = @run_id"
 
@@ -87,7 +87,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
     now = utc_now()
 
     def check(resource: str, name: str, expected_count: int, actual_count: int) -> None:
-        """Create auditable raw reconciliation evidence, including failed checks."""
+        """Registra un control y su resultado, incluidos los casos que no coinciden."""
         checks.append(dict(checked_at=now, run_id=run_id, resource=resource,
                            check_name=name, check_status='PASS' if expected_count == actual_count else 'FAIL',
                            expected_count=expected_count, actual_count=actual_count,
@@ -127,7 +127,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
 
 
 def main() -> int:
-    """Run bounded remote reconciliation and persist results in raw controls."""
+    """Ejecuta la verificación remota con límite de bytes y guarda evidencia en control."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('load_manifest', type=artifact_path)
     parser.add_argument('--project', default=PROJECT_ID)

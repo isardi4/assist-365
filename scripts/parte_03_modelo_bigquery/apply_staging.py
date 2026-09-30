@@ -23,7 +23,7 @@ RESOURCES = {'polizas', 'siniestros', 'agencias', 'productos', 'tipo_cambio'}
 
 
 def bq(args: list[str], location: str, sql: str | None = None) -> str:
-    """Run a bounded BigQuery command; SQL is passed through stdin."""
+    """Ejecuta un comando bq y devuelve su salida; envía el SQL por entrada estándar."""
     result = subprocess.run(['bq', f'--project_id={PROJECT}', f'--location={location}',
                              *args], input=sql, capture_output=True, text=True)
     if result.returncode:
@@ -33,19 +33,20 @@ def bq(args: list[str], location: str, sql: str | None = None) -> str:
 
 
 def query(sql: str, location: str, job_id: str, parameters: list[str]) -> str:
-    """Execute one SQL script with a 4 GiB ceiling for the script."""
+    """Ejecuta SQL parametrizado con un límite de bytes facturados de 4 GiB."""
     return bq([f'--job_id={job_id}', 'query', '--use_legacy_sql=false',
                '--maximum_bytes_billed=4294967296', '--format=json', '--max_rows=1000',
                *[f'--parameter={p}' for p in parameters]], location, sql)
 
 
 def metadata_api() -> object:
-    """Build a verified-TLS metadata client using the active gcloud identity."""
+    """Crea un lector de metadatos BigQuery con la identidad activa de gcloud y TLS."""
     token = subprocess.run(['gcloud', 'auth', 'print-access-token'],
                            capture_output=True, text=True, check=True).stdout.strip()
     context = ssl_context()
 
     def api(path: str) -> dict:
+        """Consulta la ruta de metadatos BigQuery recibida y devuelve su respuesta JSON."""
         request = urllib.request.Request(
             f'https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT}/' + path,
             headers={'Authorization': 'Bearer ' + token})
@@ -58,7 +59,7 @@ def metadata_api() -> object:
 
 
 def inspect_layout(evidence: Path, require_clean: bool = False) -> list[dict]:
-    """Record actual table layouts and verify business-only staging fields."""
+    """Verifica las tablas y campos de staging y guarda su inventario físico."""
     api = metadata_api()
     inventory = []
     expected = set(json.loads((ROOT / 'silver_schema.json').read_text()))
@@ -90,7 +91,7 @@ def inspect_layout(evidence: Path, require_clean: bool = False) -> list[dict]:
 
 
 def source_parameters(manifest_path: Path, selected: list[str]) -> tuple[dict, list[str]]:
-    """Verify source artifacts and derive bounded raw partitions and row counts."""
+    """Valida los archivos y obtiene fechas y conteos para limitar la lectura de raw."""
     manifest = json.loads(manifest_path.read_text())
     if manifest.get('source_run_status') not in {'SUCCESS', 'SUCCESS_WITH_QUARANTINE'}:
         raise ExtractionError('La captura de origen no está completa.')
@@ -137,7 +138,7 @@ def source_parameters(manifest_path: Path, selected: list[str]) -> tuple[dict, l
 
 
 def apply(manifest_path: Path, location: str, resources: list[str], cleanup: bool = False, replay: bool = False) -> None:
-    """Merge a batch atomically and record reconciliation, checkpoints and failures."""
+    """Aplica el lote con MERGE transaccional y registra controles, checkpoints y fallas."""
     resources = sorted(set(resources))
     manifest, parameters = source_parameters(manifest_path, resources)
     run_id = manifest['run_id']
@@ -192,7 +193,7 @@ def apply(manifest_path: Path, location: str, resources: list[str], cleanup: boo
 
 
 def main() -> int:
-    """Apply all resources or only a verified policy delta; never call the API."""
+    """Procesa todos los recursos o un delta validado de pólizas sin consultar la API."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('load_manifest', type=artifact_path, nargs='?', default=None)
     parser.add_argument('--location', default='us-central1')

@@ -14,6 +14,7 @@ from scripts.shared.common import ExtractionError, atomic_write, emit
 
 
 def inventory(prefix: GCSPath) -> dict:
+    """Lista los objetos de un prefijo GCS y sus metadatos, recorriendo todas las páginas."""
     objects = {}
     token = None
     while True:
@@ -31,6 +32,7 @@ def inventory(prefix: GCSPath) -> dict:
 
 
 def migrate(raw: Path, prepared: Path, destination: GCSPath, upload: bool = True) -> dict:
+    """Copia y verifica un snapshot local en GCS y actualiza las rutas de sus manifiestos."""
     raw_manifest = json.loads((raw / 'manifest.json').read_text())
     load_manifest = json.loads((prepared / 'load_manifest.json').read_text())
     run_id = raw_manifest['run_id']

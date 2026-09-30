@@ -17,7 +17,7 @@ from .storage import append_error, finish_resource, load_or_create_manifest, sav
 
 
 def finalize_run(manifest_path: Path, manifest: dict[str, Any]) -> None:
-    """Set the run-level outcome from the completion states of all resources."""
+    """Determina el estado final de la corrida según el resultado de cada recurso."""
     statuses = [state["status"] for state in manifest["resources"].values()]
     if any(status == "FAILED" for status in statuses):
         status = "FAILED"
@@ -33,7 +33,7 @@ def finalize_run(manifest_path: Path, manifest: dict[str, Any]) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse conservative defaults, explicit full mode, and optional resource filters."""
+    """Lee las opciones de extracción, incluidos recursos, límites y modo completo."""
     parser = argparse.ArgumentParser(description="Checkpointed, low-rate Assist-365 API extractor.")
     parser.add_argument("--output-dir", type=artifact_path,
                         help="Prefijo gs:// para páginas/checkpoints; por defecto gcs_root/raw.")
@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Run selected resources, record failures, and return a nonzero partial/failure code."""
+    """Ejecuta la extracción y devuelve un código de error si queda parcial o falla."""
     args = parse_args()
     run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     try:

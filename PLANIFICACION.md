@@ -361,3 +361,8 @@ El despliegue diario, restauración en otro proyecto y delta/API son mejoras pen
 - Superado el pendiente de acceso señalado por la auditoría anterior. La comprobación acredita permisos concedidos, no una sesión interactiva del destinatario. Otras identidades deberán revisar sus permisos.
 - Requisitos principales del ejercicio cubiertos con la alternativa documentada de orquestación; snapshot completo, warehouse, modelo, análisis y tablero ejecutados; medición y ensayo publicados. Uso de IA documentado. Bonus tests entregado; MCP, CI y video opcionales no realizados.
 - Diseño diario, delta, restauración genérica y mantenimiento del tablero permanecen como mejoras declaradas. No son servicios activos ni se afirma su despliegue. Se conserva la prohibición de API nueva.
+
+
+## Descripciones Python en español — 30/09/2026
+
+Revisadas las 142 funciones, métodos y clases del repositorio, incluidas funciones internas y pruebas. Se agregaron o tradujeron docstrings breves en español en 20 archivos, explicando su propósito y los controles relevantes. Verificación AST: misma lógica al quitar docstrings; ninguna definición sin descripción; sintaxis y diff válidos. Las 20 pruebas offline terminaron OK. No se ejecutaron API, cargas ni cambios en BigQuery/GCS.

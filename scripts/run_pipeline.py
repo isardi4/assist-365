@@ -19,6 +19,7 @@ from scripts.parte_03_modelo_bigquery.gold.apply_gold import apply as apply_gold
 
 
 def run(run_id: str, cutoff: str, location: str, setup: bool = False) -> dict:
+    """Ejecuta preparación, raw, staging y gold desde GCS y guarda el reporte de la corrida."""
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', run_id):
         raise ExtractionError('run_id inválido.')
     if any(shutil.which(tool) is None for tool in ['gcloud', 'bq']):
@@ -57,6 +58,7 @@ def run(run_id: str, cutoff: str, location: str, setup: bool = False) -> dict:
 
 
 def main() -> int:
+    """Lee las opciones del pipeline y devuelve un código de error si alguna etapa falla."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-id', required=True)
     parser.add_argument('--fecha-corte', type=date.fromisoformat, required=True)

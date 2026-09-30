@@ -12,6 +12,7 @@ OUT=artifact_path(gcs_root()) / 'claims_audit'
 
 
 def leaves(value, prefix=''):
+    """Recorre objetos y listas JSON y devuelve la ruta y el valor de cada hoja."""
     if isinstance(value,dict):
         for key,item in value.items():
             yield from leaves(item, prefix+'.'+key if prefix else key)
@@ -23,6 +24,7 @@ def leaves(value, prefix=''):
 
 
 def profile():
+    """Analiza duplicados, negativos y monedas faltantes en los siniestros preparados de GCS."""
     manifest=json.loads(MANIFEST.read_text())
     resource=next(x for x in manifest['resources'] if x['resource']=='siniestros')
     seen={}; duplicate=0; conflicts=0

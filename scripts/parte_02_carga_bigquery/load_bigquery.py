@@ -25,7 +25,7 @@ def bq_load(
     source: Path, table: str, schema: Path, location: str,
     project_id: str = PROJECT_ID,
 ) -> None:
-    """Run one synchronous append load job and raise on any nonzero CLI result."""
+    """Carga un archivo en modo append y registra el job para evitar repetirlo."""
     dataset = RAW_DATASET if table in RAW_RESOURCES else CONTROL_DATASET
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     identity = {"project": project_id, "location": location, "dataset": dataset, "table": table,
@@ -76,7 +76,7 @@ def bq_load(
 
 
 def verify_prepared_file(path: Path, metadata: dict[str, Any]) -> None:
-    """Reject a missing or modified file before it can create a BigQuery load job."""
+    """Comprueba existencia, tamaño y huella del archivo antes de cargarlo."""
     if not path.is_file():
         raise ExtractionError(f"No existe el archivo preparado: {path}")
     if path.stat().st_size != metadata.get("compressed_bytes"):
@@ -90,7 +90,7 @@ def verify_prepared_file(path: Path, metadata: dict[str, Any]) -> None:
 
 
 def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -> None:
-    """Load one fully prepared run sequentially, once per resource file."""
+    """Valida y carga los archivos del lote, o verifica los conteos si ya fue migrado."""
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     migration = manifest.get("remote_resource_migration")
     if manifest.get("source_run_status") not in {"SUCCESS", "SUCCESS_WITH_QUARANTINE"}:
@@ -164,7 +164,7 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse a prepared-run manifest and required BigQuery location."""
+    """Lee la ruta del manifiesto preparado y la región de BigQuery."""
     parser = argparse.ArgumentParser(description="Load verified GCS or local raw files to BigQuery.")
     parser.add_argument("load_manifest", type=artifact_path)
     parser.add_argument("--location", required=True,
@@ -174,7 +174,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Load a verified prepared run, without API extraction."""
+    """Carga un lote preparado y verificado, sin consultar la API fuente."""
     args = parse_args()
     try:
         load_run(args.load_manifest, args.location, args.project)

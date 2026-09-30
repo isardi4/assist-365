@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 
 
 def apply(location: str = 'us-central1', fecha_corte: str = '2026-09-29') -> dict:
+    """Construye y publica gold desde staging y guarda controles, metadatos y evidencia."""
     job_id = 'assist365_gold_' + uuid.uuid4().hex
     evidence = artifact_path(gcs_root()) / 'gold' / job_id
     evidence.mkdir(parents=True, exist_ok=True)

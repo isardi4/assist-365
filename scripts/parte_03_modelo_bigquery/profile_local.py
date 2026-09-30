@@ -19,7 +19,7 @@ from scripts.shared.artifacts import artifact_path, gcs_root
 
 
 def load_manifest(run_dir: Path) -> dict[str, Any]:
-    """Load a raw manifest and require a completed run before profiling it."""
+    """Lee el manifiesto raw y exige que la captura esté completa antes de analizarla."""
     path = run_dir / "manifest.json"
     if not path.is_file():
         raise ExtractionError(f"No existe el manifiesto de origen: {path}")
@@ -32,7 +32,7 @@ def load_manifest(run_dir: Path) -> dict[str, Any]:
 def read_resource_rows(
     run_dir: Path, resource: str, pages: list[dict[str, Any]],
 ) -> Iterator[dict[str, Any]]:
-    """Yield source rows after checking each raw page checksum and row count."""
+    """Lee las filas del recurso tras verificar la huella y el conteo de cada página."""
     for page in pages:
         path = run_dir / page["raw_file"]
         if not path.is_file():
@@ -53,7 +53,7 @@ def read_resource_rows(
 
 
 def normalized_date(value: Any) -> str | None:
-    """Parse a source date or timestamp into its UTC calendar date."""
+    """Interpreta una fecha o timestamp de origen y devuelve su día calendario UTC."""
     if not isinstance(value, str) or not value:
         return None
     try:
@@ -72,7 +72,7 @@ def normalized_date(value: Any) -> str | None:
 
 
 def type_name(value: Any) -> str:
-    """Classify a JSON value without including its contents in the report."""
+    """Clasifica el tipo de un valor JSON sin incluir su contenido en el informe."""
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -91,13 +91,13 @@ def type_name(value: Any) -> str:
 
 
 def profile_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
-    """Summarize keys, event operations, quality issues, and local join coverage."""
+    """Resume claves, operaciones, calidad y relaciones entre los recursos de la captura."""
     resources = manifest["resources"]
     profiles: dict[str, Any] = {}
     raw_shape: dict[str, dict[str, Any]] = {}
 
     def observe_shape(resource: str, row: dict[str, Any]) -> None:
-        """Count present, explicit-null, nested, and non-finite raw values."""
+        """Cuenta campos presentes, nulos, anidados y valores no finitos de las filas raw."""
         stats = raw_shape.setdefault(resource, {
             "rows": 0,
             "present": collections.Counter(),
@@ -184,7 +184,7 @@ def profile_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     sorted_fx_dates = {currency: sorted(days) for currency, days in fx_dates_by_currency.items()}
 
     def rate_coverage(day: str | None, currency: Any) -> str:
-        """Classify exact or previous-day exchange-rate availability."""
+        """Clasifica la disponibilidad de cotización en la fecha indicada o en días anteriores."""
         if not day:
             return "invalid_date"
         if not isinstance(currency, str):
@@ -423,7 +423,7 @@ def profile_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse local raw-run and optional profile-output paths."""
+    """Lee la ruta raw local o GCS y el destino opcional del informe."""
     parser = argparse.ArgumentParser(description="Profile verified raw files from GCS or a local directory.")
     parser.add_argument("run_dir", type=artifact_path, help="GCS prefix or local directory containing manifest.json")
     parser.add_argument("--output", type=artifact_path,
@@ -432,7 +432,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Create a source profile after validating the raw page files."""
+    """Valida las páginas raw y genera un informe del contenido de la captura."""
     args = parse_args()
     try:
         manifest = load_manifest(args.run_dir)

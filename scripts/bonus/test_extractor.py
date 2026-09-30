@@ -13,12 +13,15 @@ from scripts.parte_01_extraccion.api.client import ApiClient
 
 
 class FixtureClient:
+    """Simula respuestas paginadas de la API sin hacer solicitudes de red."""
     def __init__(self, *args):
+        """Inicializa los contadores y la lista de consultas del cliente simulado."""
         self.request_count = 0
         self.retry_count = 0
         self.calls = []
 
     def get_json(self, endpoint, params):
+        """Devuelve una página de catálogo, pólizas o siniestros y registra la consulta simulada."""
         self.request_count += 1
         self.calls.append((endpoint, params))
         if endpoint == 'catalogos':
@@ -35,7 +38,9 @@ class FixtureClient:
 
 
 class ExtractorTests(unittest.TestCase):
+    """Prueba extracción, reanudación y descompresión con respuestas simuladas."""
     def test_full_cli_writes_gcs_and_complete_resume_does_not_call_api(self):
+        """Comprueba la paginación y escritura GCS y que repetir una captura completa no llame a la API."""
         storage = MemoryGCS()
         client = FixtureClient()
         argv = ['extractor', '--full', '--run-id', 'fixture', '--output-dir', 'gs://test-bucket/raw']
@@ -59,6 +64,7 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual([p['offset'] for e,p in client.calls if e == 'siniestros'], [0, 500])
 
     def test_http_client_decodes_gzip_with_fixture_response(self):
+        """Comprueba que el cliente descomprima una respuesta HTTP gzip simulada."""
         body = b'{"data":[]}'
         response = io.BytesIO(gzip.compress(body))
         response.headers = {'Content-Encoding': 'gzip'}

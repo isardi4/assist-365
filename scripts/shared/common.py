@@ -12,26 +12,26 @@ from typing import Any
 
 
 class ExtractionError(RuntimeError):
-    """A concise operational error safe to record in logs and ledgers."""
+    """Representa un error operativo que puede registrarse sin exponer datos sensibles."""
 
 
 def utc_now() -> str:
-    """Return an ISO-8601 UTC timestamp for manifests and structured logs."""
+    """Devuelve la fecha y hora actuales en UTC para manifiestos y logs."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def emit(event: str, **fields: Any) -> None:
-    """Write one structured log event without source payloads or credentials."""
+    """Escribe un evento JSON con su fecha UTC y los campos recibidos."""
     print(json.dumps({"timestamp": utc_now(), "event": event, **fields}, ensure_ascii=False), flush=True)
 
 
 def sha256(data: bytes) -> str:
-    """Return a stable SHA-256 fingerprint for source and artifact checks."""
+    """Calcula la huella SHA-256 de los bytes para comprobar su integridad."""
     return hashlib.sha256(data).hexdigest()
 
 
 def atomic_write(path: Path, data: bytes) -> None:
-    """Write a file through a temporary sibling, then atomically replace it."""
+    """Guarda bytes de forma atómica, en GCS o mediante un archivo temporal local."""
     if str(path).startswith('gs://'):
         path.write_bytes(data)
         return

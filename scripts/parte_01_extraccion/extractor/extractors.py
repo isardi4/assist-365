@@ -21,7 +21,7 @@ def extract_catalog(
     resource: str, client: Any, run_dir: Path, manifest_path: Path,
     error_path: Path, manifest: dict[str, Any], max_pages: int | None,
 ) -> None:
-    """Download and reconcile one complete, non-paginated catalog."""
+    """Descarga un catálogo completo y comprueba sus filas antes de confirmarlo."""
     state = manifest["resources"][resource]
     if state["complete"]:
         return
@@ -54,7 +54,7 @@ def extract_policies(
     client: Any, run_dir: Path, manifest_path: Path, error_path: Path,
     manifest: dict[str, Any], max_pages: int | None,
 ) -> None:
-    """Follow policy cursors until exhausted, detecting repeats and schema drift."""
+    """Descarga pólizas por cursor y detecta cursores repetidos o cambios de esquema."""
     resource = "polizas"
     state = manifest["resources"][resource]
     if state["complete"]:
@@ -115,7 +115,7 @@ def extract_claims(
     client: Any, run_dir: Path, manifest_path: Path, error_path: Path,
     manifest: dict[str, Any], max_pages: int | None,
 ) -> None:
-    """Read siniestros in fixed offsets and reconcile page counts to source total."""
+    """Descarga siniestros por offset y compara las filas recibidas con el total informado."""
     resource = "siniestros"
     state = manifest["resources"][resource]
     if state["complete"]:

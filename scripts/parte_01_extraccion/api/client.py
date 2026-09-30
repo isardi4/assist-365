@@ -25,7 +25,7 @@ USER_AGENT = "assist365-case-extractor/0.1"
 
 
 def retry_after_seconds(value: str | None) -> float | None:
-    """Parse Retry-After as seconds or an HTTP date, if the server provides it."""
+    """Interpreta Retry-After como segundos de espera o como una fecha HTTP."""
     if not value:
         return None
     try:
@@ -40,10 +40,10 @@ def retry_after_seconds(value: str | None) -> float | None:
 
 
 class ApiClient:
-    """Send sequential authenticated GET requests and track calls and retries."""
+    """Consulta la API en serie y registra la cantidad de solicitudes y reintentos."""
 
     def __init__(self, token: str, min_interval: float, timeout: float, max_retries: int = MAX_RETRIES):
-        """Store request settings and initialize a TLS-verifying session state."""
+        """Configura token, pausas, timeout y reintentos, e inicializa los contadores."""
         self._token = token
         self._context = ssl_context()
         self._min_interval = min_interval
@@ -54,7 +54,7 @@ class ApiClient:
         self.retry_count = 0
 
     def get_json(self, path: str, params: dict[str, str | int]) -> tuple[bytes, Any, int]:
-        """Fetch and decompress one JSON response, retrying transient failures only."""
+        """Obtiene una respuesta JSON, descomprime gzip y reintenta errores transitorios."""
         query = urllib.parse.urlencode(params)
         url = f"{BASE_URL}/{path}?{query}" if query else f"{BASE_URL}/{path}"
         for attempt in range(self._max_retries + 1):
@@ -113,7 +113,7 @@ class ApiClient:
 
     @staticmethod
     def _backoff(attempt: int, server_delay: float | None, resource: str) -> None:
-        """Wait with jitter and never undercut a server-provided Retry-After."""
+        """Espera antes de reintentar, respetando Retry-After y agregando una variación aleatoria."""
         exponential = min(MAX_BACKOFF_SECONDS, 2**attempt)
         delay = max(server_delay or 0.0, random.uniform(exponential * 0.75, exponential * 1.25))
         emit("retry_wait", resource=resource, attempt=attempt + 1, wait_seconds=round(delay, 2))

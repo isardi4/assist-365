@@ -18,7 +18,7 @@ DEFAULT_CONFIG_FILE = Path(__file__).resolve().parents[3] / "config/assist365.js
 
 
 def ssl_context() -> ssl.SSLContext:
-    """Build a verifying TLS context, falling back to macOS system root certificates."""
+    """Crea un contexto TLS que verifica certificados y admite las raíces de macOS."""
     context = ssl.create_default_context()
     paths = ssl.get_default_verify_paths()
     if (paths.cafile and Path(paths.cafile).is_file()) or (paths.capath and Path(paths.capath).is_dir()):
@@ -46,7 +46,7 @@ def ssl_context() -> ssl.SSLContext:
 
 
 def read_token() -> str:
-    """Read the configured API token, allowing an environment override."""
+    """Lee el token API de la configuración, con prioridad para la variable de entorno."""
     token = os.environ.get("ASSIST365_API_TOKEN", "").strip()
     if not token:
         config_file = Path(os.environ.get("ASSIST365_CONFIG_FILE", str(DEFAULT_CONFIG_FILE))).expanduser()

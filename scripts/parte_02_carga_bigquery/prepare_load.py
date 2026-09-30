@@ -27,13 +27,13 @@ SOURCE_KEYS = {
 
 
 def canonical_json(value: Any) -> str:
-    """Serialize a JSON value deterministically for stable row fingerprints."""
+    """Serializa JSON con un orden estable para calcular huellas reproducibles."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
                       allow_nan=False)
 
 
 def encode_non_finite(value: Any, path: str = "$", issues: list[dict[str, str]] | None = None) -> Any:
-    """Replace non-finite numbers with explicit JSON markers and record their paths."""
+    """Reemplaza números no finitos por marcadores JSON y registra sus rutas."""
     if issues is None:
         issues = []
     if isinstance(value, float) and not math.isfinite(value):
@@ -50,7 +50,7 @@ def encode_non_finite(value: Any, path: str = "$", issues: list[dict[str, str]] 
 
 
 def source_key(resource: str, row: Any) -> str | None:
-    """Build a source key when the observed row contains its documented identifiers."""
+    """Obtiene la clave de origen cuando la fila contiene los identificadores del recurso."""
     fields = SOURCE_KEYS.get(resource, ())
     if not fields or not isinstance(row, dict) or any(row.get(field) is None for field in fields):
         return None
@@ -58,7 +58,7 @@ def source_key(resource: str, row: Any) -> str | None:
 
 
 def normalized_timestamp(value: Any) -> str | None:
-    """Return an ISO UTC timestamp for parseable source timestamps, otherwise null."""
+    """Convierte una fecha válida a UTC; devuelve None si no puede interpretarla."""
     if not isinstance(value, str) or not value:
         return None
     try:
@@ -71,7 +71,7 @@ def normalized_timestamp(value: Any) -> str | None:
 
 
 def file_fingerprint(path: Path) -> tuple[int, str]:
-    """Return a streamed size and SHA-256 checksum for a prepared artifact."""
+    """Calcula el tamaño y la huella SHA-256 leyendo el archivo por bloques."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for block in iter(lambda: source.read(1024 * 1024), b""):
@@ -83,7 +83,7 @@ def write_resource(
     run_dir: Path, output_file: Path, run_id: str, resource: str,
     pages: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Verify a resource's pages and combine them into one atomic gzip load unit."""
+    """Verifica las páginas de un recurso y las reúne en un archivo gzip para BigQuery."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{output_file.name}.", suffix=".tmp",
                                      dir=None if isinstance(output_file, GCSPath) else output_file.parent)
@@ -184,7 +184,7 @@ def write_error_ledger(
     run_dir: Path, output_dir: Path, run_id: str,
     data_quality_errors: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
-    """Convert the structured error ledger into a BigQuery load file."""
+    """Convierte el registro de errores en un archivo preparado para BigQuery."""
     source = run_dir / "errors.jsonl"
     if (not source.is_file() or source.stat().st_size == 0) and not data_quality_errors:
         return None
@@ -239,7 +239,7 @@ def write_error_ledger(
 
 
 def write_control_file(destination: Path, rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Write a small atomic gzip NDJSON file for run or reconciliation metadata."""
+    """Guarda registros de control en un archivo NDJSON comprimido de forma atómica."""
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=".tmp",
                                      dir=None if isinstance(destination, GCSPath) else destination.parent)
@@ -263,7 +263,7 @@ def write_control_file(destination: Path, rows: list[dict[str, Any]]) -> dict[st
 
 
 def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) -> Path:
-    """Verify a run and create replayable NDJSON gzip files without API calls."""
+    """Valida la captura y prepara archivos de carga, o reutiliza un lote intacto existente."""
     manifest_path = run_dir / "manifest.json"
     if not manifest_path.is_file():
         raise ExtractionError(f"No existe el manifiesto: {manifest_path}")
@@ -413,7 +413,7 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse source/output paths and the explicit partial-run override."""
+    """Lee rutas de origen y destino y la opción explícita de aceptar una captura parcial."""
     parser = argparse.ArgumentParser(
         description="Verify GCS or local raw pages and prepare BigQuery NDJSON gzip load files."
     )
@@ -426,7 +426,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Check source integrity and convert pages without querying the source API."""
+    """Verifica las páginas y prepara archivos de carga sin consultar la API fuente."""
     args = parse_args()
     try:
         prepare_run(args.run_dir, args.output_dir or artifact_path(gcs_root()) / "bigquery-load", args.allow_partial)

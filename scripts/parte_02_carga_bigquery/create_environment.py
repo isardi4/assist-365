@@ -38,7 +38,7 @@ TABLE_SCHEMAS = {
 
 
 def run_bq(arguments: list[str], location: str) -> subprocess.CompletedProcess[str]:
-    """Run a BigQuery CLI command with explicit project location and captured output."""
+    """Ejecuta bq con proyecto y región explícitos y captura su salida."""
     return subprocess.run(
         ["bq", f"--project_id={PROJECT_ID}", f"--location={location}", *arguments],
         capture_output=True, text=True, check=False,
@@ -46,7 +46,7 @@ def run_bq(arguments: list[str], location: str) -> subprocess.CompletedProcess[s
 
 
 def existing_datasets(location: str) -> set[str]:
-    """List current datasets so creation never overwrites or assumes their region."""
+    """Lista los datasets existentes para reutilizarlos sin sobrescribirlos."""
     result = run_bq(["ls", "--format=json"], location)
     if result.returncode:
         raise ExtractionError(f"No se pudieron listar datasets: {result.stderr[-500:]}")
@@ -61,7 +61,7 @@ def existing_datasets(location: str) -> set[str]:
 
 
 def dataset_location(dataset: str, location: str) -> str:
-    """Read a dataset's configured location before reusing it."""
+    """Consulta la región del dataset antes de reutilizarlo."""
     result = run_bq(["show", "--format=json", f"{PROJECT_ID}:{dataset}"], location)
     if result.returncode:
         raise ExtractionError(f"No se pudo inspeccionar {dataset}: {result.stderr[-500:]}")
@@ -72,7 +72,7 @@ def dataset_location(dataset: str, location: str) -> str:
 
 
 def create_environment(location: str) -> None:
-    """Create datasets/tables and apply each table's schema metadata in one update."""
+    """Crea o reutiliza datasets y tablas y actualiza sus esquemas y descripciones."""
     if shutil.which("bq") is None:
         raise ExtractionError("No se encontró bq CLI en PATH.")
     existing = existing_datasets(location)
@@ -123,7 +123,7 @@ def create_environment(location: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse the required, explicit BigQuery location for resource creation."""
+    """Lee la región explícita donde se creará o reutilizará el entorno BigQuery."""
     parser = argparse.ArgumentParser(description="Crear el entorno BigQuery de Assist-365.")
     parser.add_argument("--location", required=True,
                         help="Ubicación fija de los cuatro datasets, por ejemplo US.")
@@ -131,7 +131,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Create datasets/tables, failing safely when environment already exists."""
+    """Prepara el entorno BigQuery y devuelve un error si no puede validarlo o crearlo."""
     args = parse_args()
     try:
         create_environment(args.location)

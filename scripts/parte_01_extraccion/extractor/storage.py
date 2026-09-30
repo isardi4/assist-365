@@ -14,21 +14,21 @@ from ...shared.artifacts import append_bytes
 
 
 def save_manifest(path: Path, manifest: dict[str, Any]) -> None:
-    """Atomically persist run state so the next invocation can resume safely."""
+    """Guarda el estado de la corrida de forma atómica para permitir su reanudación."""
     manifest["updated_at"] = utc_now()
     raw = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
     atomic_write(path, raw)
 
 
 def append_error(path: Path, record: dict[str, Any]) -> None:
-    """Append one structured failure without including the source record value."""
+    """Agrega un error estructurado al registro sin incluir el contenido del dato fuente."""
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps({"timestamp": utc_now(), **record}, ensure_ascii=False).encode("utf-8") + b"\n"
     append_bytes(path, line)
 
 
 def initial_manifest(run_id: str, output_dir: Path, selected: list[str]) -> dict[str, Any]:
-    """Create an empty manifest covering every source and selected resource."""
+    """Crea un manifiesto vacío con los recursos y opciones de la extracción."""
     return {
         "manifest_version": 1,
         "run_id": run_id,
@@ -54,7 +54,7 @@ def initial_manifest(run_id: str, output_dir: Path, selected: list[str]) -> dict
 def load_or_create_manifest(
     path: Path, run_id: str, output_dir: Path, selected: list[str],
 ) -> dict[str, Any]:
-    """Load a compatible checkpoint or initialize a new extraction run."""
+    """Recupera un checkpoint compatible o inicia el manifiesto de una nueva corrida."""
     if path.exists():
         manifest = json.loads(path.read_text(encoding="utf-8"))
         if manifest.get("manifest_version") != 1 or manifest.get("run_id") != run_id:
@@ -66,12 +66,12 @@ def load_or_create_manifest(
 
 
 def page_path(run_dir: Path, resource: str, page_number: int) -> Path:
-    """Return the canonical artifact path for a resource page."""
+    """Construye la ruta de una página según su recurso y número."""
     return run_dir / resource / f"page-{page_number:06d}.json.gz"
 
 
 def write_raw_page(raw_body: bytes, run_dir: Path, resource: str, page_number: int) -> Path:
-    """Durably store a full response page, preserving retries as separate files."""
+    """Guarda la respuesta completa y conserva los reintentos en archivos separados."""
     path = page_path(run_dir, resource, page_number)
     if path.exists():
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
@@ -81,7 +81,7 @@ def write_raw_page(raw_body: bytes, run_dir: Path, resource: str, page_number: i
 
 
 def json_type(value: Any) -> str:
-    """Classify a JSON value without retaining its contents."""
+    """Identifica el tipo de un valor JSON sin conservar su contenido."""
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -100,7 +100,7 @@ def json_type(value: Any) -> str:
 def shape_summary(
     data: list[Any],
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]], list[tuple[int, Any]]]:
-    """Count record field-shapes and value types, returning non-object rows for quarantine."""
+    """Resume campos y tipos de las filas y detecta registros que no son objetos."""
     counts: dict[str, int] = {}
     field_types: dict[str, dict[str, int]] = {}
     invalid: list[tuple[int, Any]] = []
@@ -122,7 +122,7 @@ def fail_record(
     error_path: Path, manifest: dict[str, Any], resource: str, page_number: int,
     row_index: int, row: Any, raw_file: str,
 ) -> None:
-    """Record a malformed top-level row by position and fingerprint, retaining raw separately."""
+    """Registra la posición y huella de una fila inválida, conservando el original en raw."""
     fingerprint = sha256(json.dumps(row, ensure_ascii=False, sort_keys=True,
                                     separators=(",", ":")).encode("utf-8"))
     append_error(error_path, {
@@ -142,7 +142,7 @@ def persist_page(
     raw_body: bytes, payload: Any, path: Path, run_dir: Path, manifest: dict[str, Any],
     resource: str, page_number: int, request_position: dict[str, Any],
 ) -> tuple[dict[str, Any], list[tuple[int, Any]]]:
-    """Describe a saved response page without changing or projecting its JSON body."""
+    """Genera los metadatos de una página guardada sin modificar su respuesta JSON."""
     if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
         raise ExtractionError(f"Respuesta inválida en {resource}, página {page_number}; JSON crudo preservado.")
     rows = payload["data"]
@@ -170,7 +170,7 @@ def commit_page(
     page: dict[str, Any], invalid_rows: list[tuple[int, Any]], error_path: Path,
     manifest_path: Path, manifest: dict[str, Any], resource: str,
 ) -> None:
-    """Commit page metadata and row-level quarantine entries as one checkpoint."""
+    """Confirma la página y sus registros en cuarentena en un mismo checkpoint."""
     state = manifest["resources"][resource]
     raw_file = page.pop("_raw_file")
     page["raw_file"] = raw_file
@@ -191,7 +191,7 @@ def mark_in_progress(
     manifest_path: Path, manifest: dict[str, Any], resource: str,
     page_number: int, position: dict[str, Any],
 ) -> None:
-    """Persist the requested page position before issuing its API call."""
+    """Guarda la posición solicitada antes de consultar la siguiente página de la API."""
     manifest["resources"][resource]["in_progress"] = {
         "page_number": page_number, **position, "started_at": utc_now(),
     }
@@ -203,7 +203,7 @@ def fetch_and_save_page(
     manifest_path: Path, manifest: dict[str, Any], resource: str,
     page_number: int, position: dict[str, Any],
 ) -> tuple[bytes, Path]:
-    """Recover a pending raw page when possible; otherwise request and save it atomically."""
+    """Recupera una página pendiente ya guardada o la descarga y persiste para reanudar."""
     state = manifest["resources"][resource]
     pending = state.get("in_progress", {})
     same_request = pending.get("page_number") == page_number and all(
@@ -233,7 +233,7 @@ def fetch_and_save_page(
 
 
 def report_schema_changes(manifest: dict[str, Any], resource: str, page: dict[str, Any]) -> None:
-    """Log new record shapes and field types relative to previously committed pages."""
+    """Registra campos o tipos nuevos respecto de las páginas confirmadas."""
     seen: set[str] = set()
     prior_types: dict[str, set[str]] = {}
     for old_page in manifest["resources"][resource]["pages"]:
@@ -258,7 +258,7 @@ def report_schema_changes(manifest: dict[str, Any], resource: str, page: dict[st
 
 
 def finish_resource(manifest_path: Path, manifest: dict[str, Any], resource: str, complete: bool) -> None:
-    """Set a resource to complete or partial, preserving quarantine status."""
+    """Marca el recurso como completo o parcial y conserva su estado de cuarentena."""
     state = manifest["resources"][resource]
     state["complete"] = complete
     if complete:
