@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import gzip
 import hashlib
 import json
 import re
@@ -14,12 +13,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts.shared.common import ExtractionError, atomic_write, emit
+from scripts.shared.artifacts import artifact_path, gcs_root, open_gzip
 from scripts.parte_01_extraccion.api.common import ssl_context
 from scripts.parte_02_carga_bigquery.load_bigquery import verify_prepared_file
 
 PROJECT = 'a365-de-ignacio'
 ROOT = Path(__file__).resolve().parent
-DEFAULT_MANIFEST = Path('.local_data/assist365/bigquery-load/smoke-20260929/load_manifest.json')
 RESOURCES = {'polizas', 'siniestros', 'agencias', 'productos', 'tipo_cambio'}
 
 
@@ -91,7 +90,7 @@ def inspect_layout(evidence: Path, require_clean: bool = False) -> list[dict]:
 
 
 def source_parameters(manifest_path: Path, selected: list[str]) -> tuple[dict, list[str]]:
-    """Verify local artifacts and derive bounded raw partitions and row counts."""
+    """Verify source artifacts and derive bounded raw partitions and row counts."""
     manifest = json.loads(manifest_path.read_text())
     if manifest.get('source_run_status') not in {'SUCCESS', 'SUCCESS_WITH_QUARANTINE'}:
         raise ExtractionError('La captura de origen no está completa.')
@@ -103,10 +102,10 @@ def source_parameters(manifest_path: Path, selected: list[str]) -> tuple[dict, l
         name = resource['resource']
         if name not in selected:
             continue
-        path = Path(resource['load_file'])
+        path = artifact_path(resource['load_file'])
         verify_prepared_file(path, resource)
         count = 0
-        with gzip.open(path, 'rt') as stream:
+        with open_gzip(path, 'rt') as stream:
             for line in stream:
                 row = json.loads(line)
                 if row['run_id'] != manifest['run_id'] or row['resource'] != name:
@@ -114,13 +113,13 @@ def source_parameters(manifest_path: Path, selected: list[str]) -> tuple[dict, l
                 dates.add(row['ingested_at'][:10])
                 count += 1
         if count != resource['rows']:
-            raise ExtractionError(f'Conteo local inválido: {name}.')
+            raise ExtractionError(f'Conteo de archivo inválido: {name}.')
         counts[name] = count
     if set(counts) != set(selected):
         raise ExtractionError('Faltan recursos o particiones para la carga.')
-    run_path = Path(manifest['run_file']['load_file'])
+    run_path = artifact_path(manifest['run_file']['load_file'])
     verify_prepared_file(run_path, manifest['run_file'])
-    with gzip.open(run_path, 'rt') as source:
+    with open_gzip(run_path, 'rt') as source:
         run = json.loads(next(source))
     source_day = run['started_at'][:10]
     if not dates:
@@ -145,7 +144,7 @@ def apply(manifest_path: Path, location: str, resources: list[str], cleanup: boo
     if not re.fullmatch(r'[A-Za-z0-9_-]+', run_id):
         raise ExtractionError('run_id inválido.')
     attempt = 'assist365_silver_' + uuid.uuid4().hex
-    evidence = Path('.local_data/assist365/silver') / run_id / attempt
+    evidence = artifact_path(gcs_root()) / 'silver' / run_id / attempt
     evidence.mkdir(parents=True, exist_ok=True)
     ddl_job = attempt + '_ddl'
     query((ROOT / 'sql/010_silver_tables.sql').read_text(), location, ddl_job, [])
@@ -195,14 +194,14 @@ def apply(manifest_path: Path, location: str, resources: list[str], cleanup: boo
 def main() -> int:
     """Apply all resources or only a verified policy delta; never call the API."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('load_manifest', type=Path, nargs='?', default=DEFAULT_MANIFEST)
+    parser.add_argument('load_manifest', type=artifact_path, nargs='?', default=None)
     parser.add_argument('--location', default='us-central1')
     parser.add_argument('--resources', nargs='+', default=sorted(RESOURCES))
     parser.add_argument('--retire-legacy', action='store_true')
     parser.add_argument('--replay', action='store_true', help='Reprocesar incluso un lote ya confirmado.')
     args = parser.parse_args()
     try:
-        apply(args.load_manifest, args.location, args.resources, args.retire_legacy, args.replay)
+        apply(args.load_manifest or artifact_path(gcs_root()) / "bigquery-load/smoke-20260929/load_manifest.json", args.location, args.resources, args.retire_legacy, args.replay)
         return 0
     except Exception as exc:
         emit('silver_batch_failed', error_class=type(exc).__name__, message=str(exc))

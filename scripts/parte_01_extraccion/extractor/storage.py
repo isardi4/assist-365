@@ -1,16 +1,16 @@
-"""Local raw-page storage, durable checkpoints, manifests, and error ledgers."""
+"""Raw-page storage, durable checkpoints, manifests, and error ledgers."""
 
 from __future__ import annotations
 
 import gzip
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from ..api.common import BASE_URL, RESOURCES
 from ...shared.common import ExtractionError, atomic_write, emit, sha256, utc_now
+from ...shared.artifacts import append_bytes
 
 
 def save_manifest(path: Path, manifest: dict[str, Any]) -> None:
@@ -24,10 +24,7 @@ def append_error(path: Path, record: dict[str, Any]) -> None:
     """Append one structured failure without including the source record value."""
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps({"timestamp": utc_now(), **record}, ensure_ascii=False).encode("utf-8") + b"\n"
-    with path.open("ab") as output:
-        output.write(line)
-        output.flush()
-        os.fsync(output.fileno())
+    append_bytes(path, line)
 
 
 def initial_manifest(run_id: str, output_dir: Path, selected: list[str]) -> dict[str, Any]:
@@ -69,7 +66,7 @@ def load_or_create_manifest(
 
 
 def page_path(run_dir: Path, resource: str, page_number: int) -> Path:
-    """Return the canonical local path for a resource page."""
+    """Return the canonical artifact path for a resource page."""
     return run_dir / resource / f"page-{page_number:06d}.json.gz"
 
 

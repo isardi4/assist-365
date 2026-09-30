@@ -32,6 +32,9 @@ def sha256(data: bytes) -> str:
 
 def atomic_write(path: Path, data: bytes) -> None:
     """Write a file through a temporary sibling, then atomically replace it."""
+    if str(path).startswith('gs://'):
+        path.write_bytes(data)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     try:

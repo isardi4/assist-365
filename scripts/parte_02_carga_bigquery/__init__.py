@@ -1,1 +1,1 @@
-"""Part 2: local preparation, raw BigQuery setup, and batch loading."""
+"""Part 2: GCS preparation, raw BigQuery setup, and batch loading."""

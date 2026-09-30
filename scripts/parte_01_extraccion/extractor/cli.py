@@ -11,6 +11,7 @@ from typing import Any
 from ..api.client import ApiClient
 from ..api.common import RESOURCES, read_token
 from ...shared.common import ExtractionError, emit, sha256, utc_now
+from ...shared.artifacts import artifact_path, gcs_root
 from .extractors import extract_catalog, extract_claims, extract_policies
 from .storage import append_error, finish_resource, load_or_create_manifest, save_manifest
 
@@ -34,8 +35,8 @@ def finalize_run(manifest_path: Path, manifest: dict[str, Any]) -> None:
 def parse_args() -> argparse.Namespace:
     """Parse conservative defaults, explicit full mode, and optional resource filters."""
     parser = argparse.ArgumentParser(description="Checkpointed, low-rate Assist-365 API extractor.")
-    parser.add_argument("--output-dir", type=Path, default=Path(".local_data/assist365/raw"),
-                        help="Directorio local ignorado por Git para raw, manifests y errores.")
+    parser.add_argument("--output-dir", type=artifact_path,
+                        help="Prefijo gs:// para páginas/checkpoints; por defecto gcs_root/raw.")
     parser.add_argument("--run-id", help="ID para reanudar una ejecución; por defecto se genera uno UTC.")
     limits = parser.add_mutually_exclusive_group()
     limits.add_argument("--max-pages-per-resource", type=int, default=1,
@@ -67,10 +68,10 @@ def main() -> int:
     """Run selected resources, record failures, and return a nonzero partial/failure code."""
     args = parse_args()
     run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    run_dir = args.output_dir / run_id
-    manifest_path = run_dir / "manifest.json"
-    error_path = run_dir / "errors.jsonl"
     try:
+        run_dir = (args.output_dir or artifact_path(gcs_root()) / "raw") / run_id
+        manifest_path = run_dir / "manifest.json"
+        error_path = run_dir / "errors.jsonl"
         token = read_token()
         client = ApiClient(token, args.min_interval_seconds, args.timeout_seconds, args.max_retries)
         del token

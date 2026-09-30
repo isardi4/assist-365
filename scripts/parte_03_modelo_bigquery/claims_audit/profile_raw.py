@@ -1,15 +1,14 @@
 """Inspect existing prepared claim JSON without exposing personal details."""
 from __future__ import annotations
 import collections
-import gzip
 import hashlib
 import json
 import re
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
+from scripts.shared.artifacts import artifact_path, gcs_root, open_gzip
 
-MANIFEST=Path('.local_data/assist365/bigquery-load/smoke-20260929/load_manifest.json')
-OUT=Path('.local_data/assist365/claims_audit')
+MANIFEST=artifact_path(gcs_root()) / 'bigquery-load/smoke-20260929/load_manifest.json'
+OUT=artifact_path(gcs_root()) / 'claims_audit'
 
 
 def leaves(value, prefix=''):
@@ -29,7 +28,7 @@ def profile():
     seen={}; duplicate=0; conflicts=0
     negative=[]; missing=[]; positive=collections.defaultdict(list)
     key_counts=collections.Counter(); currency_kinds=collections.Counter()
-    with gzip.open(resource['load_file'],'rt') as source:
+    with open_gzip(resource['load_file'],'rt') as source:
         for line in source:
             payload=json.loads(line)['payload']
             if isinstance(payload,str):payload=json.loads(payload)

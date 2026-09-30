@@ -1,4 +1,4 @@
-"""Prepare and reconcile local raw pages for a later BigQuery load."""
+"""Prepare and reconcile raw pages for a later BigQuery load."""
 
 from .prepare_load import main
 

@@ -37,10 +37,10 @@ Desde la raíz, con Google Cloud CLI autenticada y un manifiesto cargado y conci
 
 ```bash
 python3 -m scripts.parte_03_modelo_bigquery.apply_staging \
-  .local_data/assist365/bigquery-load/<run-id>/load_manifest.json
+  gs://a365-de-ignacio-assist365-data/bigquery-load/<run-id>/load_manifest.json
 ```
 
-`--resources polizas` permite un delta de pólizas; los otros recursos requieren captura completa. `--replay` reprocesa un lote confirmado. MERGE modifica registros nuevos o distintos; un lote idéntico se omite según checksum y versión SQL. Datos, conciliaciones y checkpoints se confirman juntos en una transacción. El límite es 4 GiB facturables por script.
+`--resources polizas` permite un delta de pólizas; los otros recursos requieren captura completa. `--replay` reprocesa un lote confirmado. MERGE modifica registros nuevos o distintos; un lote idéntico se omite según checksum y versión SQL. Datos, conciliaciones y checkpoints se confirman juntos en una transacción. El límite es 4 GiB facturables por script. Las evidencias quedan en `gcs_root/silver/<run-id>/`; gold las guarda en `gcs_root/gold/`.
 
 ## Validación y consumo
 

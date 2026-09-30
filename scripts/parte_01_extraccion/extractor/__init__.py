@@ -1,1 +1,1 @@
-"""Resource-specific paginated extractors and local checkpoint storage."""
+"""Resource-specific paginated extractors and GCS checkpoint storage."""

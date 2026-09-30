@@ -1,4 +1,4 @@
-"""Load prepared local gzip NDJSON into BigQuery with replay-safe job fingerprints."""
+"""Load prepared gzip NDJSON into BigQuery with replay-safe job fingerprints."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.shared.common import ExtractionError, atomic_write, emit
+from scripts.shared.artifacts import artifact_path
 
 
 PROJECT_ID = "a365-de-ignacio"
@@ -110,10 +111,10 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
         if manifest.get(key):
             artifacts.append(manifest[key])
     for artifact in artifacts:
-        verify_prepared_file(Path(artifact["load_file"]), artifact)
+        verify_prepared_file(artifact_path(artifact["load_file"]), artifact)
 
     for resource in manifest["resources"]:
-        source = Path(resource["load_file"])
+        source = artifact_path(resource["load_file"])
         verify_prepared_file(source, resource)
         if resource["rows"]:
             bq_load(source, resource["resource"], SCHEMA_DIR / "raw_records_schema.json", location,
@@ -121,18 +122,18 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
 
     run_file = manifest.get("run_file", {}).get("load_file")
     if run_file:
-        verify_prepared_file(Path(run_file), manifest["run_file"])
-        bq_load(Path(run_file), "ingestion_runs", SCHEMA_DIR / "ingestion_runs_schema.json",
+        verify_prepared_file(artifact_path(run_file), manifest["run_file"])
+        bq_load(artifact_path(run_file), "ingestion_runs", SCHEMA_DIR / "ingestion_runs_schema.json",
                 location, project_id)
     reconciliation_file = manifest.get("reconciliation_file", {}).get("load_file")
     if reconciliation_file:
-        verify_prepared_file(Path(reconciliation_file), manifest["reconciliation_file"])
-        bq_load(Path(reconciliation_file), "reconciliations",
+        verify_prepared_file(artifact_path(reconciliation_file), manifest["reconciliation_file"])
+        bq_load(artifact_path(reconciliation_file), "reconciliations",
                 SCHEMA_DIR / "reconciliations_schema.json", location, project_id)
 
     error_file: dict[str, Any] | None = manifest.get("error_file")
     if error_file and error_file.get("errors", 0):
-        source = Path(error_file["load_file"])
+        source = artifact_path(error_file["load_file"])
         verify_prepared_file(source, error_file)
         bq_load(source, "ingestion_errors", SCHEMA_DIR / "ingestion_errors_schema.json",
                 location, project_id)
@@ -143,8 +144,8 @@ def load_run(manifest_path: Path, location: str, project_id: str = PROJECT_ID) -
 
 def parse_args() -> argparse.Namespace:
     """Parse a prepared-run manifest and required BigQuery location."""
-    parser = argparse.ArgumentParser(description="Load verified local raw files to BigQuery.")
-    parser.add_argument("load_manifest", type=Path)
+    parser = argparse.ArgumentParser(description="Load verified GCS or local raw files to BigQuery.")
+    parser.add_argument("load_manifest", type=artifact_path)
     parser.add_argument("--location", required=True,
                         help="Ubicación del dataset BigQuery, por ejemplo US.")
     parser.add_argument("--project", default=PROJECT_ID)
@@ -152,7 +153,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Load a verified run locally prepared earlier, without API extraction."""
+    """Load a verified prepared run, without API extraction."""
     args = parse_args()
     try:
         load_run(args.load_manifest, args.location, args.project)

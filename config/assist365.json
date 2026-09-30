@@ -1,3 +1,4 @@
 {
-  "api_token": "893f833b4cb06ba7447344e1f4605778"
+  "api_token": "893f833b4cb06ba7447344e1f4605778",
+  "gcs_root": "gs://a365-de-ignacio-assist365-data"
 }

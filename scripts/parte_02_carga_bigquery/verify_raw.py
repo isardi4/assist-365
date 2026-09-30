@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import re
 import subprocess
@@ -10,6 +9,7 @@ import uuid
 from pathlib import Path
 
 from scripts.shared.common import ExtractionError, atomic_write, emit, utc_now
+from scripts.shared.artifacts import artifact_path, open_gzip
 from .load_bigquery import PROJECT_ID, RAW_DATASET, CONTROL_DATASET, SCHEMA_DIR, bq_load
 
 
@@ -27,7 +27,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
         dates = set()
         artifacts = manifest[key] if key == 'resources' else [manifest[key]]
         for artifact in artifacts:
-            with gzip.open(artifact['load_file'], 'rt') as source:
+            with open_gzip(artifact['load_file'], 'rt') as source:
                 for line in source:
                     dates.add(json.loads(line)[column][:10])
         day_bounds[key] = (min(dates), max(dates))
@@ -128,7 +128,7 @@ def verify_raw(manifest_path: Path, project: str, location: str, maximum_bytes: 
 def main() -> int:
     """Run bounded remote reconciliation and persist results in raw controls."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('load_manifest', type=Path)
+    parser.add_argument('load_manifest', type=artifact_path)
     parser.add_argument('--project', default=PROJECT_ID)
     parser.add_argument('--location', required=True)
     parser.add_argument('--maximum-bytes-billed', type=int, default=1024**3)

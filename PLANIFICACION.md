@@ -4,7 +4,7 @@
 
 | Fase | Estado real |
 |---|---|
-| Extracción y raw | Snapshot completo conservado; carga por recurso y 29 conciliaciones remotas. |
+| Extracción y raw | Snapshot completo migrado a GCS; carga por recurso y 29 conciliaciones remotas. |
 | Staging | Seis tablas físicas; MERGE incremental raw→silver, 13 conciliaciones y flags de calidad. |
 | Gold | Cohortes mensuales: 45.875 filas, 15,21 MB, 24 conciliaciones y 21 pruebas funcionales. |
 | Análisis | Dos queries independientes desde staging: país/plan y país/canal de agencia, por cohorte mensual de emisión. |
@@ -294,3 +294,13 @@ Secret Manager cancelado por solicitud del usuario. El intento de habilitación 
 El usuario autorizó explícitamente incluir el token del challenge en GitHub para ejecución desde un clon. La configuración final es `config/assist365.json`; lectura por defecto desde la raíz del repositorio, con override de `ASSIST365_API_TOKEN` o `ASSIST365_CONFIG_FILE`. EJERCICIO.md sigue ignorado y no es dependencia runtime. No se copian tokens OAuth, claves de cuentas de servicio ni credenciales de Google Cloud. Cargas BigQuery usan gcloud.
 
 Siete pruebas unitarias verifican selección y errores de configuración sin red. La lectura del token se verificó localmente sin solicitudes a la API. La publicación en GitHub está autorizada para esta configuración y su integración.
+
+## Migración del almacenamiento a GCS — 30/09/2026
+
+- Bucket `gs://a365-de-ignacio-assist365-data`, STANDARD, `us-central1`, acceso uniforme y acceso público bloqueado.
+- Snapshot existente copiado sin API: 1.316 archivos verificados por tamaño/MD5 y dos manifiestos rebajados a rutas GCS, conservando fingerprints, recibos y confirmación de migración raw.
+- Extracción guarda páginas/checkpoints/errores en GCS; preparación publica NDJSON/manifiestos; raw carga URI GCS; staging lee el manifiesto cloud. Evidencias nuevas silver/gold también quedan en el bucket.
+- Se conserva soporte explícito de rutas locales para pruebas/migraciones, pero el almacenamiento predeterminado es GCS. Preparación usa temporales efímeros y los elimina; no necesita snapshots locales.
+- 14 pruebas offline aprobadas (7 almacenamiento y 7 configuración API). Validación real de los cinco recursos desde GCS aprobada: 1.147.859 filas idénticas a raw en tablas temporales de control, eliminadas al terminar. Cero filas agregadas a raw productiva y cero llamadas API. Repetición del cargador cloud omitió el snapshot migrado; 29 comprobaciones raw existentes aprobadas, con evidencia en GCS.
+- Preparación real GCS→NDJSON GCS probada con productos: 12 filas y checksum comprimido idéntico al artefacto de referencia.
+- Staging ejecutado desde el manifiesto GCS: job `assist365_silver_b74b6d23eb7346afb852c3fcb9c0e228`, SUCCESS; mismos conteos en las seis tablas y evidencia cloud en `silver/smoke-20260929/`.

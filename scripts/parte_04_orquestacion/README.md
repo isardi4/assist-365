@@ -17,6 +17,6 @@ El corte gold debe corresponder a la captura validada: `--fecha-corte 2026-09-29
 
 ## Alcance cloud
 
-Cloud Run Job, Cloud Scheduler y GCS **no están desplegados**. El diseño previsto consiste en un Job invocado por Scheduler, con etapas secuenciales, salida ante fallas, identidad de servicio y almacenamiento persistente de archivos/checkpoints.
+GCS está desplegado en `us-central1`, con acceso público bloqueado. Cloud Run Job y Cloud Scheduler **no están desplegados**. El diseño previsto consiste en un Job invocado por Scheduler, con etapas secuenciales, salida ante fallas, identidad de servicio y almacenamiento persistente de archivos/checkpoints.
 
-La implementación actual usa archivos locales, el token API de `config/assist365.json` y credenciales CLI para Google Cloud. Se entrega el comportamiento de recuperación del pipeline; no un servicio diario automatizado ni delta de API por `updated_since`.
+La implementación actual persiste páginas, checkpoints, archivos de carga y evidencias en GCS; usa el token API de `config/assist365.json` y credenciales CLI para Google Cloud. Se entrega el comportamiento de recuperación del pipeline; no un servicio diario automatizado ni delta de API por `updated_since`.

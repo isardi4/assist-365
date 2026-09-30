@@ -1,4 +1,4 @@
-"""Convert validated local API pages into BigQuery-ready newline-delimited JSON."""
+"""Convert validated API pages into BigQuery-ready newline-delimited JSON."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.shared.common import ExtractionError, emit, sha256, utc_now
+from scripts.shared.artifacts import GCSPath, artifact_path, gcs_root, publish_file
 
 
 SOURCE_KEYS = {
@@ -85,7 +86,7 @@ def write_resource(
     """Verify a resource's pages and combine them into one atomic gzip load unit."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{output_file.name}.", suffix=".tmp",
-                                     dir=output_file.parent)
+                                     dir=None if isinstance(output_file, GCSPath) else output_file.parent)
     count = 0
     digest = hashlib.sha256()
     page_checks: list[dict[str, Any]] = []
@@ -160,7 +161,7 @@ def write_resource(
                     })
             raw_output.flush()
             os.fsync(raw_output.fileno())
-        os.replace(temporary, output_file)
+        publish_file(temporary, output_file)
     except Exception:
         try:
             os.unlink(temporary)
@@ -183,14 +184,14 @@ def write_error_ledger(
     run_dir: Path, output_dir: Path, run_id: str,
     data_quality_errors: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
-    """Convert the local structured error ledger into a BigQuery load file."""
+    """Convert the structured error ledger into a BigQuery load file."""
     source = run_dir / "errors.jsonl"
     if (not source.is_file() or source.stat().st_size == 0) and not data_quality_errors:
         return None
     destination = output_dir / "errors.ndjson.gz"
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=".tmp",
-                                     dir=destination.parent)
+                                     dir=None if isinstance(destination, GCSPath) else destination.parent)
     count = 0
     try:
         with os.fdopen(fd, "wb") as raw_output:
@@ -225,7 +226,7 @@ def write_error_ledger(
                     count += 1
             raw_output.flush()
             os.fsync(raw_output.fileno())
-        os.replace(temporary, destination)
+        publish_file(temporary, destination)
     except Exception:
         try:
             os.unlink(temporary)
@@ -241,7 +242,7 @@ def write_control_file(destination: Path, rows: list[dict[str, Any]]) -> dict[st
     """Write a small atomic gzip NDJSON file for run or reconciliation metadata."""
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=".tmp",
-                                     dir=destination.parent)
+                                     dir=None if isinstance(destination, GCSPath) else destination.parent)
     try:
         with os.fdopen(fd, "wb") as raw_output:
             with gzip.GzipFile(fileobj=raw_output, mode="wb", mtime=0) as compressed:
@@ -249,7 +250,7 @@ def write_control_file(destination: Path, rows: list[dict[str, Any]]) -> dict[st
                     compressed.write((canonical_json(row) + "\n").encode("utf-8"))
             raw_output.flush()
             os.fsync(raw_output.fileno())
-        os.replace(temporary, destination)
+        publish_file(temporary, destination)
     except Exception:
         try:
             os.unlink(temporary)
@@ -262,7 +263,7 @@ def write_control_file(destination: Path, rows: list[dict[str, Any]]) -> dict[st
 
 
 def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) -> Path:
-    """Verify a local run and create replayable NDJSON gzip files without API calls."""
+    """Verify a run and create replayable NDJSON gzip files without API calls."""
     manifest_path = run_dir / "manifest.json"
     if not manifest_path.is_file():
         raise ExtractionError(f"No existe el manifiesto: {manifest_path}")
@@ -392,23 +393,23 @@ def prepare_run(run_dir: Path, output_dir: Path, allow_partial: bool = False) ->
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse local source/output paths and the explicit partial-run override."""
+    """Parse source/output paths and the explicit partial-run override."""
     parser = argparse.ArgumentParser(
-        description="Verify local raw pages and prepare BigQuery NDJSON gzip load files."
+        description="Verify GCS or local raw pages and prepare BigQuery NDJSON gzip load files."
     )
-    parser.add_argument("run_dir", type=Path, help="Directorio de una corrida con manifest.json")
-    parser.add_argument("--output-dir", type=Path,
-                        default=Path(".local_data/assist365/bigquery-load"))
+    parser.add_argument("run_dir", type=artifact_path, help="Directorio de una corrida con manifest.json")
+    parser.add_argument("--output-dir", type=artifact_path,
+                        help="Destino preparado; por defecto gcs_root/bigquery-load.")
     parser.add_argument("--allow-partial", action="store_true",
                         help="Permite preparar smoke tests incompletos; nunca para producción.")
     return parser.parse_args()
 
 
 def main() -> int:
-    """Run local integrity checks and convert page files without network access."""
+    """Check source integrity and convert pages without querying the source API."""
     args = parse_args()
     try:
-        prepare_run(args.run_dir, args.output_dir, args.allow_partial)
+        prepare_run(args.run_dir, args.output_dir or artifact_path(gcs_root()) / "bigquery-load", args.allow_partial)
         return 0
     except Exception as exc:
         emit("bigquery_preparation_failed", error_class=type(exc).__name__,

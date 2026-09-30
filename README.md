@@ -7,13 +7,13 @@ Solución del challenge de Data Engineering: ingesta de cinco recursos, capas ra
 ## Acceso y ejecución
 
 - **Consultar resultados:** abrir el dashboard o ejecutar las [dos queries de análisis](scripts/parte_05_analisis/README.md) con acceso a BigQuery. No requieren token API ni archivos locales.
-- **Reconstruir modelos:** seguir la [guía de ejecución](docs/EJECUCION.md). Staging consume raw y gold consume staging; recrear raw requiere los archivos del snapshot, excluidos de Git.
+- **Reconstruir modelos:** seguir la [guía de ejecución](docs/EJECUCION.md). Staging consume raw y gold consume staging; recrear raw usa el snapshot conservado en GCS, sin volver a consultar la API.
 - **Entorno:** Python 3.10+, Google Cloud CLI y permisos en `a365-de-ignacio`, región `us-central1`. Los destinos están vinculados a ese proyecto.
 - **API:** el token del challenge está incluido en [config/assist365.json](config/assist365.json) y el extractor lo lee automáticamente. Las credenciales de Google Cloud se obtienen con `gcloud auth login`, no desde ese archivo.
 
 ## Arquitectura
 
-`API → archivos gzip verificados → raw → staging → mart → Looker Studio`
+`API → gzip y checkpoints en GCS → raw → staging → mart → Looker Studio`
 
 | Dataset | Contenido |
 |---|---|
@@ -22,7 +22,7 @@ Solución del challenge de Data Engineering: ingesta de cinco recursos, capas ra
 | `assist365_mart` | `dashboard_diario`: agregado **mensual** por cohorte de emisión y dimensiones comerciales. |
 | `assist365_control` | Ejecuciones, checkpoints, conciliaciones y revisión de anomalías, separados de los datos de negocio. |
 
-La captura de referencia es del **29/09/2026**.
+La captura de referencia es del **29/09/2026**. Sus archivos están en `gs://a365-de-ignacio-assist365-data`: `raw/` contiene páginas/checkpoints y `bigquery-load/` contiene NDJSON/manifiestos/recibos. Las evidencias nuevas de modelos se guardan en `silver/` y `gold/`. El bucket comparte región con BigQuery y requiere acceso autenticado.
 
 ## Decisiones del modelo
 
@@ -78,7 +78,7 @@ El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden s
 | Punto solicitado | Estado | Entrega y criterio |
 |---|---|---|
 | **1. Extracción** | Implementado | Pólizas, siniestros y tres catálogos completos, con paginación, reintentos y recuperación. Se priorizó conservar una captura verificable. |
-| **2. Carga en BigQuery** | Implementado | Raw por recurso y controles separados. Carga directa de gzip local con `bq load`: evita infraestructura adicional y permite verificar archivos y conteos. |
+| **2. Carga en BigQuery** | Implementado | Raw por recurso y controles separados. Carga de gzip desde GCS con `bq load`, checksums y conciliación de registros. |
 | **3. Modelo** | Implementado | Hecho de ventas: `polizas_activas`, una fila por póliza; hecho de siniestros: `siniestros`, una fila por evento. Catálogos de producto/agencia y FX fecha/moneda, más historial de pólizas. Los granos y reglas I/U/D están documentados. |
 | **4. Orquestación diaria** | Diseño, sin despliegue | CLI reproducible y recuperación implementadas. Cloud Run/Scheduler no desplegados: se priorizó cerrar datos y análisis antes de automatizar. La segunda extracción sería un snapshot completo; el mismo run_id reanuda una captura. |
 | **5. Análisis** | Implementado | Dos queries mensuales con prima/costo USD y cantidades. Siniestralidad por país/plan e insight de canal por país, con evolución de tres trimestres. |

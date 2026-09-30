@@ -8,13 +8,14 @@ import uuid
 from pathlib import Path
 from scripts.parte_03_modelo_bigquery.apply_staging import bq, query, metadata_api
 from scripts.shared.common import atomic_write, emit
+from scripts.shared.artifacts import artifact_path, gcs_root
 
 ROOT = Path(__file__).resolve().parent
 
 
 def apply(location: str = 'us-central1', fecha_corte: str = '2026-09-29') -> dict:
     job_id = 'assist365_gold_' + uuid.uuid4().hex
-    evidence = Path('.local_data/assist365/gold') / job_id
+    evidence = artifact_path(gcs_root()) / 'gold' / job_id
     evidence.mkdir(parents=True, exist_ok=True)
     sql = '\n'.join((ROOT / 'sql' / name).read_text() for name in (
         '002_build_dashboard.sql', '001_dashboard_table.sql', '003_publish_dashboard.sql'))

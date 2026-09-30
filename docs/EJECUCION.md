@@ -12,13 +12,17 @@ gcloud config set project a365-de-ignacio
 bq version
 ```
 
+Para leer el snapshot se requiere `roles/storage.objectViewer` sobre el bucket; para extracción, preparación y evidencias se requiere `roles/storage.objectUser`. La identidad que ejecuta jobs BigQuery también necesita leer los objetos que carga. Si se usa una identidad de servicio, concederle esos mismos permisos.
+
+`config/assist365.json` define `gcs_root`; `ASSIST365_GCS_ROOT` lo puede reemplazar. Cambiar el bucket exige crearlo en una región compatible y conceder sus permisos.
+
 La autenticación debe completarla la persona que ejecuta el proyecto. Esta guía no concede permisos ni comparte datos automáticamente.
 
 ## Configuración de la API
 
 [config/assist365.json](../config/assist365.json) contiene el token del challenge y está versionado. El extractor lo lee automáticamente al clonar el repositorio; no usa Secret Manager, el Markdown del ejercicio ni un archivo local de secretos. `ASSIST365_API_TOKEN` permite sustituir el token y `ASSIST365_CONFIG_FILE` seleccionar otro JSON con `api_token`.
 
-El token solo sirve para extraer desde la API. Cargas, modelos y queries usan la identidad de `gcloud` con permisos BigQuery. La ruta de análisis siguiente no consulta la API.
+El token solo sirve para extraer desde la API. Cargas, modelos y queries usan la identidad de `gcloud` con permisos BigQuery y GCS. La ruta de análisis siguiente no consulta la API.
 
 ## Camino rápido: análisis desde staging
 
@@ -37,26 +41,26 @@ Los resultados se agrupan por mes de emisión (`mes_cohorte`). Desde/hasta selec
 
 ## Reconstruir desde archivos ya existentes
 
-Requiere un snapshot completo con manifiesto y sus archivos gzip, ubicado bajo `.local_data/assist365/raw/<run-id>/`. Estos datos no forman parte del repositorio público. Si no están disponibles, usar el warehouse existente; un clon por sí solo no puede recrear raw sin la fuente o una copia autorizada del snapshot.
+El snapshot `smoke-20260929` está disponible en `gs://a365-de-ignacio-assist365-data`. Con permisos de lectura del bucket, un clon puede reutilizarlo sin archivos locales ni nuevas consultas a la API. El proyecto entregado ya lo tiene cargado: el manifiesto conserva esa confirmación y evita duplicarlo. No volver a preparar un lote ya cargado; reutilizar su manifiesto.
 
 ```bash
 python3 -m scripts.parte_02_carga_bigquery.create_datasets --location us-central1
-python3 -m scripts.parte_02_carga_bigquery.prepare_load \
-  .local_data/assist365/raw/<run-id>
-python3 -m scripts.parte_02_carga_bigquery.load_local \
-  .local_data/assist365/bigquery-load/<run-id>/load_manifest.json \
+python3 -m scripts.parte_02_carga_bigquery.load_bigquery \
+  gs://a365-de-ignacio-assist365-data/bigquery-load/smoke-20260929/load_manifest.json \
   --location us-central1
 python3 -m scripts.parte_02_carga_bigquery.verify_raw \
-  .local_data/assist365/bigquery-load/<run-id>/load_manifest.json \
+  gs://a365-de-ignacio-assist365-data/bigquery-load/smoke-20260929/load_manifest.json \
   --location us-central1
 python3 -m scripts.parte_03_modelo_bigquery.apply_staging \
-  .local_data/assist365/bigquery-load/<run-id>/load_manifest.json
+  gs://a365-de-ignacio-assist365-data/bigquery-load/smoke-20260929/load_manifest.json
 python3 -m scripts.parte_03_modelo_bigquery.gold.apply_gold --fecha-corte 2026-09-29
 ```
 
 Los ejecutores raw/silver/gold están vinculados al proyecto `a365-de-ignacio`; cambiar `gcloud config` no cambia sus destinos. Las queries de análisis también referencian explícitamente este proyecto. Migrar el pipeline completo a otro proyecto requiere parametrizar esos ejecutores y referencias SQL; no se presenta como una capacidad existente.
 
 Ejecutar los comandos en orden y detenerse ante un código de salida distinto de cero. Las migraciones de retirada no forman parte de la reconstrucción de un entorno nuevo.
+
+Para una captura **nueva**, preparar primero sus páginas en GCS con `python3 -m scripts.parte_02_carga_bigquery.prepare_load gs://a365-de-ignacio-assist365-data/raw/<nuevo-run-id>`. El destino predeterminado es `gcs_root/bigquery-load/<nuevo-run-id>/`. La preparación usa temporales efímeros para comprimir NDJSON, los elimina tras publicarlos y no requiere archivos locales persistentes. BigQuery carga directamente las URI GCS. `--output-dir` permite seleccionar otro prefijo.
 
 ## Validaciones
 

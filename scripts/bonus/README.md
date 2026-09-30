@@ -13,3 +13,9 @@ Se implementaron pruebas en SQL nativo de BigQuery y conciliaciones en los ejecu
 [Requisitos y comandos para ejecutarlas](../../docs/EJECUCION.md#validaciones). Las pruebas SQL se ejecutan manualmente; para configuración API usar `python3 -m unittest scripts.bonus.test_api_token`. No hay workflow de GitHub Actions.
 
 La capa semántica con SKILL.md y cinco preguntas vía MCP, CI y video no se implementaron. Se priorizó validar las métricas y completar el dashboard antes de sumar estas capacidades. Las definiciones de negocio están en el [README principal](../../README.md#capa-gold).
+
+Las pruebas offline de almacenamiento cubren páginas/checkpoints en GCS, recuperación sin API, conflictos de generación, integridad de preparación, ledger de errores, URI de carga y omisión de snapshots ya migrados:
+
+```bash
+python3 -m unittest scripts.bonus.test_gcs_pipeline scripts.bonus.test_api_token
+```

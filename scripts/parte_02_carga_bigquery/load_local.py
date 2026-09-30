@@ -1,4 +1,4 @@
-"""Load a verified local Assist-365 run into the raw BigQuery dataset."""
+"""Load a verified Assist-365 run into the raw BigQuery dataset."""
 
 from .load_bigquery import main
 

@@ -1,10 +1,10 @@
 # Extracción de la API
 
-Descarga pólizas, siniestros, agencias, productos y tipos de cambio mediante paginación. Guarda respuestas gzip, checksums, manifiesto, checkpoints y errores bajo `.local_data/assist365/raw/<run-id>/`, fuera de Git.
+Descarga pólizas, siniestros, agencias, productos y tipos de cambio mediante paginación. Guarda respuestas gzip, checksums, manifiesto, checkpoints y errores bajo `gs://a365-de-ignacio-assist365-data/raw/<run-id>/`, en GCS, fuera de Git.
 
 ## Uso y recuperación
 
-Desde la raíz del repositorio, con Python 3.10+. El extractor lee el token incluido en [config/assist365.json](../../config/assist365.json), por lo que un clon no necesita un archivo local adicional:
+Desde la raíz del repositorio, con Python 3.10+, Google Cloud CLI autenticada y permisos de lectura/escritura en el bucket. El extractor lee el token incluido en [config/assist365.json](../../config/assist365.json), por lo que un clon no necesita un archivo local adicional:
 
 ```bash
 python3 -m scripts.parte_01_extraccion.run --full --run-id <nuevo-run-id>
@@ -28,4 +28,4 @@ El snapshot `smoke-20260929` conserva **1.147.859 registros** y fue conciliado e
 
 `api/` contiene el cliente HTTP y `extractor/` implementa paginación y persistencia. [Requisitos y reproducción](../../docs/EJECUCION.md).
 
-`ASSIST365_API_TOKEN` permite reemplazar el valor configurado y `ASSIST365_CONFIG_FILE` seleccionar otro JSON. El Markdown del ejercicio no se lee durante la ejecución. Este token solo autentica la API; BigQuery utiliza la identidad de Google Cloud CLI.
+`ASSIST365_API_TOKEN` permite reemplazar el valor configurado y `ASSIST365_CONFIG_FILE` seleccionar otro JSON. El Markdown del ejercicio no se lee durante la ejecución. Este token solo autentica la API; BigQuery y GCS utilizan la identidad de Google Cloud CLI. `gcs_root` define el bucket y `ASSIST365_GCS_ROOT` permite sustituirlo. Las páginas se publican directamente en GCS; no se necesita un directorio local persistente.
