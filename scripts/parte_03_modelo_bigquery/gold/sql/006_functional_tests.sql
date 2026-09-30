@@ -498,54 +498,6 @@ SELECT
   fecha_corte fecha_corte,
   (SELECT COUNT(*) FROM checks) checks_passed,
   COUNT(*) row_count,
-  SUM(
-    8
-    + 8
-    + 8
-    + 8
-    + COALESCE(BYTE_LENGTH(`year_month`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`year_quarter`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`year_semester`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`day_of_week`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`pais`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`producto`), 0)
-    + 2
-    + 1
-    + COALESCE(BYTE_LENGTH(`canal_origen`), 0)
-    + 2
-    + 8
-    + 8
-    + 16
-    + 8
-    + 8
-    + 8
-    + 8
-    + 8
-    + 8
-    + 16
-    + 8
-    + 8
-    + 8
-    + 16
-    + 8
-    + 8
-    + 8
-    + 8
-    + 16
-    + 8
-    + 8
-    + 8
-    + 8
-    + COALESCE(BYTE_LENGTH(`tipo_producto`), 0)
-    + 2
-    + COALESCE(BYTE_LENGTH(`canal_agencia`), 0)
-    + 2
-  ) logical_bytes_upper_bound,
   CAST(SUM(CAST(FARM_FINGERPRINT(TO_JSON_STRING(c)) AS BIGNUMERIC)) AS STRING) content_fingerprint,
   SUM(polizas) policies,
   SUM(prima_usd) premium_usd_known,
@@ -569,7 +521,6 @@ SELECT
   (SELECT COUNTIF(alcance = 'EMISION_FUTURA') FROM claim_scope) claims_future_emission,
   (SELECT COUNTIF(UPPER(TRIM(estado)) = 'ANULADA') FROM policies) excluded_annulled_policies
 FROM candidate c;
-ASSERT (SELECT logical_bytes_upper_bound <= 50000000 FROM validation) AS 'Gold supera 50 MB';
 
 ASSERT NOT EXISTS (
   SELECT 1 FROM policy_values

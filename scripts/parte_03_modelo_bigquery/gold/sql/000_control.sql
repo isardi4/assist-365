@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `a365-de-ignacio.assist365_control.gold_runs` (
   finished_at TIMESTAMP OPTIONS (description = 'Instante UTC de cierre del intento de publicación gold.'),
   run_status STRING OPTIONS (description = 'Estado de ejecución: RUNNING, SUCCESS o FAILED en gold.'),
   model_sha256 STRING OPTIONS (description = 'Huella SHA256 del SQL usado para construir el agregado.'),
-  summary JSON OPTIONS (description = 'Conciliaciones, cifras y tamaño estimado de la capa gold.'),
+  summary JSON OPTIONS (description = 'Conciliaciones y cifras de negocio de la publicación gold.'),
   error_message STRING OPTIONS (description = 'Mensaje de error del intento fallido de publicación gold.')
 ) PARTITION BY DATE(started_at)
 OPTIONS (

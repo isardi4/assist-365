@@ -59,7 +59,6 @@ def apply(location: str = 'us-central1', fecha_corte: str = '2026-09-29') -> dic
     assert [(f['name'], {'BOOLEAN': 'BOOL', 'INTEGER': 'INT64'}.get(f['type'], f['type'])) for f in actual] == [(f['name'], f['type']) for f in expected]
     assert all(len(f.get('description', '')) >= 40 for f in actual)
     assert len(meta.get('description', '')) >= 200
-    assert int(meta.get('numBytes', 0)) <= 50_000_000
     assert not any(f['name'].endswith('_id') for f in actual)
     inventory = {'table': 'dashboard_diario', 'rows': int(meta.get('numRows', 0)),
                  'logical_bytes': int(meta.get('numBytes', 0)), 'fields': actual,

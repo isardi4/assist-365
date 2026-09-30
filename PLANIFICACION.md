@@ -371,3 +371,8 @@ Revisadas las 142 funciones, métodos y clases del repositorio, incluidas funcio
 ## Legibilidad de SQL — 30/09/2026
 
 Indentados los 26 archivos SQL y agregados comentarios breves en español. El incremental distingue lectura raw, tablas temporales, MERGE de historia/estado actual, catálogos/siniestros y controles finales. Verificada igualdad de tokens SQL y literales respecto del original; parser BigQuery sin errores en los 26 archivos; lector de descripción gold compatible. Sin llamadas API ni mutaciones de warehouse. El hash de versión SQL de silver cambia por el formato: la próxima corrida puede reaplicar el lote, conservando la idempotencia de sus MERGE. No se agregan dependencias de formato al repositorio.
+
+
+## Límite gold y mapa de archivos Parte 3 — 30/09/2026
+
+Retirado por solicitud el bloqueo por tamaño total de gold: ASSERT SQL de 50 MB, estimación logical_bytes_upper_bound y assert numBytes del ejecutor. La réplica de transformación en pruebas se ajustó igualmente; se conserva el registro de tamaño real, conciliaciones y presupuesto de consulta. El requisito de 50 MB se verifica con bytes procesados de jobs reales de Looker, no con tamaño de tabla. README Parte 3 actualizado: 20 SQL descritos individualmente, orden gold 000→002→001→003, diagnósticos/migraciones separados del flujo habitual y ejecutores/esquemas documentados. Enlaces locales y cobertura de SQL válidos; 21 pruebas funcionales gold y 24 controles de producción PASS en tablas temporales. No se reconstruyó el mart ni se consultó la API.
