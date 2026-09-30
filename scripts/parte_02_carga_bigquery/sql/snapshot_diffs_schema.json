@@ -2,46 +2,46 @@
   {
     "name": "compared_at",
     "type": "TIMESTAMP",
-    "description": "Fecha y hora UTC en que se generó la comparación de snapshots, usada para particionar y ordenar el historial de diferencias. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Fecha UTC en que se compararon las dos capturas."
   },
   {
     "name": "resource",
     "type": "STRING",
-    "description": "Nombre del recurso o endpoint de origen al que corresponde el dato, utilizado para separar flujos y aplicar controles específicos por entidad. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Recurso de la API al que pertenece el registro."
   },
   {
     "name": "previous_snapshot_id",
     "type": "STRING",
-    "description": "Identificador del snapshot anterior usado como base de comparación para esta diferencia, según la secuencia de capturas disponible. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Identificador de la captura anterior de comparación."
   },
   {
     "name": "current_snapshot_id",
     "type": "STRING",
-    "description": "Identificador del snapshot más reciente evaluado, que aporta el estado actual contrastado con la captura anterior. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Identificador de la captura actual de comparación."
   },
   {
     "name": "source_key",
     "type": "STRING",
-    "description": "Clave de negocio extraída de la fuente cuando está disponible; permite identificar registros y comparar cambios sin descartar el payload original. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Clave de origen usada para localizar la fila raw."
   },
   {
     "name": "change_type",
     "type": "STRING",
-    "description": "Clasificación calculada del cambio, como alta, modificación o posible ausencia; no equivale por sí sola a una baja confirmada. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Cambio observado: alta, modificación o ausencia a revisar."
   },
   {
     "name": "previous_hash",
     "type": "STRING",
-    "description": "Hash del contenido observado en el snapshot previo, nulo cuando no existía una versión anterior comparable para la clave. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Hash del contenido de la clave en la captura anterior."
   },
   {
     "name": "current_hash",
     "type": "STRING",
-    "description": "Hash del contenido observado en el snapshot actual, nulo cuando la clave no aparece y su ausencia requiere revisión antes de concluir baja. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Hash del contenido de la clave en la captura actual."
   },
   {
     "name": "review_status",
     "type": "STRING",
-    "description": "Estado de revisión humana o automatizada de la diferencia, para registrar si fue validada, descartada o requiere investigación adicional. En la tabla snapshot_diffs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Estado de revisión de la diferencia entre capturas."
   }
 ]

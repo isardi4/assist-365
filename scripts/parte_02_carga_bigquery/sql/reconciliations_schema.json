@@ -2,46 +2,46 @@
   {
     "name": "checked_at",
     "type": "TIMESTAMP",
-    "description": "Fecha y hora UTC en que se ejecutó el control, usada para ordenar verificaciones y asignar la partición de esta evidencia. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Fecha UTC en que se ejecutó el control de calidad."
   },
   {
     "name": "run_id",
     "type": "STRING",
-    "description": "Identificador estable de la ejecución que obtuvo o procesó este dato, usado para enlazarlo con métricas, errores y controles de reconciliación. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Identificador de la corrida de extracción de origen."
   },
   {
     "name": "resource",
     "type": "STRING",
-    "description": "Nombre del recurso o endpoint de origen al que corresponde el dato, utilizado para separar flujos y aplicar controles específicos por entidad. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Recurso de la API al que pertenece el registro."
   },
   {
     "name": "check_name",
     "type": "STRING",
-    "description": "Nombre estable del control aplicado, que permite comparar resultados entre corridas y entender qué condición de calidad se evaluó. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Nombre estable de la conciliación de ingesta aplicada."
   },
   {
     "name": "check_status",
     "type": "STRING",
-    "description": "Resultado normalizado del control, indicando si pasó, falló o quedó inconcluso según reglas explícitas del proceso. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Resultado del control: PASS, FAIL, BLOCKED, REVIEW o INFO."
   },
   {
     "name": "expected_count",
     "type": "INT64",
-    "description": "Cantidad de registros que el control esperaba encontrar según la fuente o el paso previo, con su criterio documentado. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Cantidad de referencia esperada por este control."
   },
   {
     "name": "actual_count",
     "type": "INT64",
-    "description": "Cantidad de registros efectivamente observados por el control en la etapa evaluada, calculada sobre el alcance indicado. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Cantidad observada al ejecutar el control de calidad."
   },
   {
     "name": "difference_count",
     "type": "INT64",
-    "description": "Diferencia entre el conteo esperado y el observado; cualquier valor no aceptado por regla debe generar investigación trazable. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Diferencia entre el conteo observado y el esperado."
   },
   {
     "name": "details",
     "type": "JSON",
-    "description": "Objeto JSON con parámetros y evidencia diagnóstica del control, como límites, conteos auxiliares o muestras de claves afectadas. En la tabla reconciliations, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Evidencia JSON resumida del resultado del control."
   }
 ]

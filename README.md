@@ -1,129 +1,107 @@
-# Assist-365 — datos y métricas
+# Assist-365 — pipeline y análisis de siniestralidad
 
-> **Estado:** extracción completa guardada y conciliada localmente. La carga de datos en BigQuery, el modelo y el tablero siguen pendientes.
+Solución del challenge de Data Engineering: ingesta de cinco recursos, capas raw/staging/mart en BigQuery y análisis de siniestralidad en USD por cohortes de emisión.
 
-## Objetivo
+**[Abrir el dashboard](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG)**. Inicia en abril–junio de 2026 y permite comparar países, planes y frecuencia/severidad, con filtros de país, producto y canal de agencia.
 
-Construir un flujo reproducible `API → raw → BigQuery → modelo → Looker Studio` que permita analizar prima, costo y frecuencia de siniestros. Se conserva el payload original y se explicitan las limitaciones de cada métrica. El plan de trabajo detallado está en [PLANIFICACION.md](PLANIFICACION.md).
+## Acceso y ejecución
 
-## Estado por parte del ejercicio
+- **Consultar resultados:** abrir el dashboard o ejecutar las [dos queries de análisis](scripts/parte_05_analisis/README.md) con acceso a BigQuery. No requieren token API ni archivos locales.
+- **Reconstruir modelos:** seguir la [guía de ejecución](docs/EJECUCION.md). Staging consume raw y gold consume staging; recrear raw requiere los archivos del snapshot, excluidos de Git.
+- **Entorno:** Python 3.10+, Google Cloud CLI y permisos en `a365-de-ignacio`, región `us-central1`. Los destinos están vinculados a ese proyecto.
+- **API:** el token del challenge está incluido en [config/assist365.json](config/assist365.json) y el extractor lo lee automáticamente. Las credenciales de Google Cloud se obtienen con `gcloud auth login`, no desde ese archivo.
 
-| Parte | Resultado actual |
+## Arquitectura
+
+`API → archivos gzip verificados → raw → staging → mart → Looker Studio`
+
+| Dataset | Contenido |
 |---|---|
-| 1. Extracción | Completa localmente: cinco recursos, 1.147.859 filas y cero registros en cuarentena. |
-| 2. Carga raw | Datasets y tablas raw/control creados en `us-central1`; 1.285 páginas verificadas y archivos locales listos para carga. Todavía no se cargaron datos. |
-| 3. Modelo | Pendiente de perfilar raw. |
-| 4. Orquestación | Pendiente; primero se validará el flujo local y la carga. |
-| 5. Análisis | Pendiente; no hay métricas de negocio calculadas. |
-| 6. Tablero | Pendiente; el límite de 50 MB deberá medirse. |
-| 7. Documentación | Se actualiza junto con cada parte; este README resume decisiones y hallazgos. |
+| `assist365_raw` | Una tabla por recurso: pólizas, siniestros, agencias, productos y tipo de cambio. JSON original y trazabilidad de carga. |
+| `assist365_staging` | Seis tablas físicas: historial y último estado de pólizas, siniestros únicos y tres catálogos. |
+| `assist365_mart` | `dashboard_diario`: agregado **mensual** por cohorte de emisión y dimensiones comerciales. |
+| `assist365_control` | Ejecuciones, checkpoints, conciliaciones y revisión de anomalías, separados de los datos de negocio. |
 
-## Organización del código
+La captura de referencia es del **29/09/2026**.
 
-Los directorios bajo `scripts/` corresponden a las siete partes del ejercicio; `shared/` contiene utilidades comunes:
+## Decisiones del modelo
 
-| Carpeta | Contenido |
+- **Pólizas:** la última U actualiza I; la última D retira la póliza del estado actual. Se conserva el historial. Gold excluye también la póliza completa si su último estado es ANULADA, junto con sus siniestros.
+- **Cohortes:** prima y siniestros se atribuyen al mes de emisión de la póliza. Se acumulan ocurrencias hasta el corte de la captura, aunque sean posteriores al mes de emisión.
+- **Conversión USD:** prima con FX de emisión; costo con FX de ocurrencia. Se usa la última cotización positiva anterior o igual a la fecha; USD tiene factor 1.
+- **Calidad:** moneda inferida válida incluida y marcada; negativos y casos monetarios no resolubles excluidos de importes y conteos. La falta de coincidencia de cobertura tiene un flag independiente. [Anomalías y fundamentos](README.md#anomalías-y-tratamiento).
+- **Cargas:** raw verifica archivos; staging aplica MERGE transaccional y checkpoints; gold se reconstruye para incorporar correcciones históricas.
+
+## Capa gold
+
+`assist365_mart.dashboard_diario` es una tabla física **mensual**, pese a su nombre. Su grano es mes de emisión, país, plan, modalidad premium, tipo de producto y canales de origen/agencia. Contiene **45.875 filas, 37 campos y 15.212.749 bytes (15,21 MB)**, sin IDs, JSON ni metadatos de carga.
+
+`date` representa el primer día del mes de emisión; `year_month` y `year_quarter` permiten agregar cohortes. `producto` contiene el nombre del plan; `canal_agencia` viene del catálogo y es distinto de `canal_origen`, que pertenece a la póliza. `day` y `day_of_week` describen el primer día del mes, no eventos diarios. [Esquema completo](scripts/parte_03_modelo_bigquery/gold/schema.json).
+
+| Métrica | Cálculo sobre gold |
 |---|---|
-| `parte_01_extraccion/` | Conexión API (`api/`), paginación/checkpoints (`extractor/`) y entrypoint `run.py`. |
-| `parte_02_carga_bigquery/` | Preparación local, DDL, carga raw y creación de datasets. |
-| `parte_03_modelo_bigquery/` | Reservada para modelos; no se define el esquema antes de observar raw. |
-| `parte_04_orquestacion/` | Reservada para ejecución diaria y despliegue. |
-| `parte_05_analisis/` | Reservada para consultas analíticas reproducibles. |
-| `parte_06_tablero/` | Reservada para consultas/preagregaciones y configuración de Looker Studio. |
-| `parte_07_readme/` | El documento final permanece en la raíz para encontrarlo fácilmente. |
-| `shared/` | Logs estructurados, errores, timestamps, hashes y escritura atómica compartidos por las partes. |
+| Siniestralidad | `SUM(costo_pagado_usd) / SUM(prima_usd)` |
+| Frecuencia pagada | `SUM(siniestros_pagados_con_costo_usd) / SUM(polizas)` |
+| Severidad USD | `SUM(costo_pagado_usd) / SUM(siniestros_pagados_con_costo_usd)` |
 
-Cada parte del ejercicio reúne su código y recursos: la carga usa `scripts/parte_02_carga_bigquery/` (SQL y esquemas en su subcarpeta `sql/`) y el modelado usará `scripts/parte_03_modelo_bigquery/`. Cada función y clase explica su responsabilidad en un docstring breve.
+Se dividen sumas, sin promediar ratios; un denominador cero significa indicador sin valor. Los siniestros se agrupan por póliza antes del join para sumar la prima una vez y conservar pólizas sin eventos. Gold se particiona por mes de `date` y se clusteriza por país, plan y canal de origen. Se reconstruye después de staging, validando el agregado antes de publicarlo. [Ejecución del modelo](scripts/parte_03_modelo_bigquery/README.md#construcción-gold).
 
-## Hallazgos de datos que condicionan el diseño
+## Anomalías y tratamiento
 
-La extracción completa `smoke-20260929` terminó en `SUCCESS` y permanece solo en `.local_data/assist365/raw/smoke-20260929/`; todavía no se cargaron datos a BigQuery. Se guardaron 1.003.461 pólizas (1.004 páginas), 138.962 siniestros (278 páginas, coinciden con el total reportado por la API), 300 agencias, 12 productos y 5.124 tipos de cambio. Las 1.147.859 filas quedaron sin registros en cuarentena y las páginas tienen continuidad numérica y archivos presentes. Los campos de primer nivel conservaron su forma y tipo observados entre páginas.
+Cantidades de staging completo al corte de referencia; las categorías pueden superponerse.
 
-La preparación local verificó los hashes y conteos de las 1.285 páginas y reconcilió 1.147.859 filas; todos los controles finalizaron `PASS`. Detectó 414 valores no finitos `NaN` en `siniestros.amount.currency`. Ningún registro se descartó: en el NDJSON para BigQuery cada valor se codificó con el marcador JSON `{"__non_finite_number__":"NaN"}`, se mantuvo el hash del registro fuente y cada ocurrencia quedó en el ledger `NonFiniteJSONNumber` con ubicación del registro. Los archivos raw originales preservan el token recibido. También figuran cuatro errores transitorios de transporte ya resueltos. Revisaremos con el proveedor qué semántica espera para `amount.currency` antes de diseñar métricas que usen ese campo.
+| Hallazgo | Decisión y fundamento |
+|---|---|
+| **411 monedas nulas** | Inferir desde la única moneda histórica de la póliza y marcar `INFERIDA_POLIZA`. En 137.170 pares comparables las monedas coinciden. La fuente permanece nula; 410 inferidos son monetariamente válidos y uno también es negativo. |
+| **824 montos negativos** | Excluir de costo y conteos: no hay evidencia de reversa/reintegro ni un positivo equivalente en la misma póliza y moneda. No usar valor absoluto ni reemplazar por cero. |
+| **829 duplicados exactos** | Deduplicar a un siniestro; un conflicto de contenido bloquea la carga. |
+| **1.242 eventos fuera de vigencia** | Marcar `FUERA_PERIODO`: ocurren 1–58 días después del fin. No cambiar el estado comercial ni excluirlos automáticamente si el importe es válido. |
+| **552 referencias sin póliza** | Marcar `POLIZA_AUSENTE`, sin inventar entidades o fechas. Fuera de gold. |
+| **4.145 ocurrencias futuras** | Conservar la fecha original y excluir eventos posteriores al corte 29/09/2026 del costo observado. |
+| **438 eventos de última ANULADA y 3.473 de última D** | Excluir la póliza completa y sus eventos de este análisis; conservarlos para auditoría e historia. |
+| **3.703 factores FX no recíprocos, de 5.124** | Respetar `factor_usd` del contrato, sin invertirlo ni corregirlo silenciosamente. |
 
-El perfil anidado de siniestros encontró tres formas en `detail`: 83.505 registros con claves en español (`ciudad_atencion`, `diagnostico`, `proveedor`), 41.538 con claves en inglés (`city`, `diagnosis`, `proveedor`) y 13.919 solo con `proveedor`. Entre los registros en español, `diagnostico` es `null` en 20.955 y texto en 62.550; `amount.currency` es texto en 138.548 y `NaN` en 414. El raw preserva estas variantes. Staging deberá perfilar los valores, acordar alias bilingües sin borrar campos fuente y tratar explícitamente los datos ausentes y no finitos antes de calcular métricas.
+Los flags separan cobertura de validez monetaria. `excluir_calculos` retira también importes nulos, moneda irrecuperable o falta de cotización válida. **Una moneda inferida válida se incluye**. Para analizar solo cobertura coincidente, gold ofrece `*_con_periodo`; se conservan prima y pólizas como denominadores.
 
-El manifiesto conserva conteos, tamaños y hashes de respuesta por página; el ledger contiene cuatro errores de transporte previos, todos resueltos al reanudar desde el checkpoint. Los contadores globales de solicitudes/reintentos corresponden a la última invocación que reanudó la corrida, por lo que no se interpretan como acumulados de todo el proceso. La extracción fue espaciada al menos dos segundos entre solicitudes y usó hasta dos reintentos por solicitud.
+La publicación gold comprende **733.169 pólizas** y **128.890 siniestros elegibles**, incluidos 100.370 PAGADO. Dentro de su población/corte hay 774 eventos monetariamente excluidos (633 PAGADO), 384 inferidos elegibles (292 PAGADO) y 1.141 elegibles sin período coincidente. Difieren de los totales anteriores por las exclusiones de población y fecha; los motivos se registran en `assist365_control`. [Diagnóstico de vigencias](scripts/parte_03_modelo_bigquery/policy_period_diagnostic.md).
 
-En todas las páginas extraídas de siniestros se observaron `occurred_at` y `reported_at`, pero no `created_at`, `updated_at`, una operación `I/U/D` ni un filtro de cambios. `reported_at` describe la fecha del reporte del evento y no debe asumirse como la fecha técnica de creación/modificación del registro.
+## Resultados y alcance
 
-### Recomendación para mejorar la API de siniestros
+La siniestralidad operativa es `SUM(costo_pagado_usd) / SUM(prima_usd)`. En abril–junio de 2026, Chile presenta el mayor ratio observado (**41,82%**) y Equipaje Protegido alcanza **144,63%**. El [análisis](scripts/parte_05_analisis/README.md) explica la evolución de tres trimestres y el papel de frecuencia, severidad y prima media.
 
-Para evitar descargar a diario las ~278 páginas actuales y detectar cambios con precisión, sugerimos exponer:
+Las validaciones incluyen **13 conciliaciones staging, 24 gold, 21 pruebas funcionales gold y ocho pruebas de flags**. Las pruebas reproducibles y requisitos están en la guía de ejecución.
 
-- `created_at` y `updated_at` en UTC; `created_at` por sí sola no permite encontrar cambios posteriores.
-- Un filtro `updated_since` más cursor estable, junto con operaciones `I/U/D` o un tombstone explícito para bajas.
-- Una paginación consistente durante cada extracción (snapshot token o cursor que no omita ni repita registros mientras cambia la fuente).
-- `paid_at` para distinguir ocurrencia, reporte, actualización y pago en las métricas de costo.
+El ratio no mide margen neto ni prima devengada; las cohortes recientes pueden seguir acumulando costo. El flujo se ejecuta por CLI con snapshots y cargas raw→staging incrementales.
 
-Hasta que el origen ofrezca un delta confiable, la alternativa observable es comparar snapshots completos por `claim_id` y hash. Las altas/cambios se pueden detectar al comparar; una fila ausente solo será candidata a baja después de conciliar el snapshot y descartar errores de paginación. El raw conservará cada snapshot para auditoría. Esto representa hoy unas 278 llamadas por corrida, no una garantía de que siempre serán necesarias: volveremos a evaluar al inspeccionar todos los registros o si el proveedor confirma campos/filtros adicionales.
+## Cobertura del ejercicio y prioridades
 
-La API de pólizas documenta `updated_since` y operaciones `I/U/D`, pero el extractor actual todavía no los envía ni consume como delta. Cuando se implemente ese modo, preservaremos eventos crudos y deduplicaremos solapamientos al construir el estado vigente. Los watermarks solo avanzarán cuando páginas, conteos y cargas hayan conciliado.
-
-### ¿Puede darse de baja un siniestro?
-
-Como hecho de negocio, un evento atendido normalmente no deja de haber ocurrido. Sí puede corregirse una carga errónea, detectarse un duplicado o anularse un reclamo; eso debería quedar como cambio de estado o tombstone auditable, no borrarse físicamente del historial. `RECHAZADO` tampoco significa que el registro haya sido eliminado. Por eso no interpretaremos la ausencia en un snapshot como baja real: primero la reportaremos como anomalía/candidata y pediremos al proveedor la semántica de correcciones y bajas.
-
-## Calidad y manejo de fallas
-
-Cada corrida conserva páginas gzip originales, manifiesto, conteos, hashes y ledger de errores bajo `.local_data/`, que está excluido de Git. No se registra el token. La prueba encontró cuatro fallos de transporte del entorno aislado; al reanudar las mismas posiciones, las respuestas se guardaron y las fallas quedaron marcadas `resolved_on_resume` en el ledger. Una etapa solo puede marcarse completa después de verificar paginación, filas, checksums y errores; las filas inválidas se conservan en raw y se reportan, no se corrigen silenciosamente.
-
-Los esquemas y el cargador batch están preparados en `scripts/parte_02_carga_bigquery/`. El procesamiento local no vuelve a llamar la API para preparar una carga. Todavía no se ejecutó una carga de datos en BigQuery.
-
-Cada tabla de BigQuery debe tener una descripción funcional de al menos 200 caracteres y cada campo una descripción de al menos 70 caracteres. El DDL documenta las tablas raw/control y los seis esquemas JSON describen sus 57 campos; `create_environment.py` aplica por tabla toda la metadata en una sola actualización para reducir operaciones y respetar los límites de BigQuery. Las tablas nuevas de staging y mart deberán cumplir el mismo criterio desde su DDL.
-
-## GCP y costos
-
-La comparación considerada fue:
-
-| Opción | Motivo | Decisión |
+| Punto solicitado | Estado | Entrega y criterio |
 |---|---|---|
-| `us-central1` (Iowa), región única | GCS Standard publicado a ~USD 0,020/GiB-mes. Permite ubicar BigQuery y el futuro bucket juntos. | **Elegida:** priorizamos costo; no necesitamos baja latencia ni réplica geográfica. |
-| `US` multi-región | Más cobertura/resiliencia geográfica, pero GCS Standard publicado a ~USD 0,026/GiB-mes. | Descartada: esa redundancia no aporta al alcance actual. |
-| `southamerica-east1` (São Paulo) | Alternativa cercana a Argentina. | Descartada: la latencia no es requisito y no ofrece una ventaja necesaria para este caso. |
+| **1. Extracción** | Implementado | Pólizas, siniestros y tres catálogos completos, con paginación, reintentos y recuperación. Se priorizó conservar una captura verificable. |
+| **2. Carga en BigQuery** | Implementado | Raw por recurso y controles separados. Carga directa de gzip local con `bq load`: evita infraestructura adicional y permite verificar archivos y conteos. |
+| **3. Modelo** | Implementado | Hecho de ventas: `polizas_activas`, una fila por póliza; hecho de siniestros: `siniestros`, una fila por evento. Catálogos de producto/agencia y FX fecha/moneda, más historial de pólizas. Los granos y reglas I/U/D están documentados. |
+| **4. Orquestación diaria** | Diseño, sin despliegue | CLI reproducible y recuperación implementadas. Cloud Run/Scheduler no desplegados: se priorizó cerrar datos y análisis antes de automatizar. La segunda extracción sería un snapshot completo; el mismo run_id reanuda una captura. |
+| **5. Análisis** | Implementado | Dos queries mensuales con prima/costo USD y cantidades. Siniestralidad por país/plan e insight de canal por país, con evolución de tres trimestres. |
+| **6. Tablero** | Parcial | Una página, cuatro gráficos y filtros sobre gold; enlace y captura incluidos. Se priorizaron preagregación y métricas: tabla de 15,21 MB y ratios visibles conciliados. **No se midió el escaneo real por carga**, por lo que el límite de 50 MB no se declara cumplido. |
+| **7. README** | Implementado | Arquitectura, ejecución, decisiones, anomalías, resultados y límites por capa. |
+| **Bonus 1. Capa semántica y MCP** | No implementado | Definiciones en documentación, sin SKILL.md ni cinco preguntas ejecutadas vía MCP. Se priorizaron SQL reproducibles y el tablero. |
+| **Bonus 2. Tests de datos** | Implementado en SQL | Conciliaciones y pruebas con tablas temporales para I/U/D, transacciones, flags y agregación. Se usó SQL nativo sin sumar otro framework. |
+| **Bonus 3. GitHub Actions** | No implementado | Pruebas ejecutables manualmente; CI quedó fuera para concentrar tiempo en validar el warehouse. |
+| **Bonus 4. Video** | No realizado | La entrega se explica mediante código, documentación y dashboard; se priorizaron resultados reproducibles. |
 
-Los valores de GCS son aproximados, derivados de la tarifa horaria publicada; revisar precios vigentes antes de crear el bucket. La ubicación del dataset BigQuery es fija y alinear bucket/dataset evita transferencias entre ubicaciones. [Precios de Cloud Storage](https://cloud.google.com/storage/pricing), [ubicaciones de BigQuery](https://docs.cloud.google.com/bigquery/docs/locations).
+El orden elegido fue **datos completos y trazables → reglas de negocio y calidad → métricas verificadas → dashboard**. Las anomalías de moneda, negativos y cobertura podían distorsionar las respuestas comerciales; resolver su tratamiento tuvo prioridad sobre despliegue diario y bonus. Se reutilizó la captura disponible para desarrollar el modelo y el análisis sin repetir consultas a la API.
 
-La lectura inicial encontró cero datasets y no mostró buckets existentes. Se crearon `assist365_raw`, `assist365_staging` y `assist365_mart`, junto con `records`, `ingestion_runs`, `ingestion_errors`, `reconciliations`, `watermarks` y `snapshot_diffs` en raw, todos en `us-central1`. No se cargaron registros ni se creó el bucket; GCS queda para después de validar la operación local. Batch load desde archivos locales es una opción documentada por BigQuery, por lo que no hace falta crear el bucket para probar esa etapa. [Cargas por lotes desde archivos locales](https://docs.cloud.google.com/bigquery/docs/batch-loading-data).
+Con más tiempo, las prioridades serían medir el consumo real de Looker y verificar el acceso del destinatario, desplegar la operación diaria y parametrizar el proyecto. Después incorporar extracción delta, CI y capa semántica. El [diseño de orquestación](scripts/parte_04_orquestacion/README.md) explica la automatización propuesta.
 
-## Ejecución local
+## Documentación
 
-Los ejemplos usan una espera mínima de 2 segundos y hasta 2 reintentos por solicitud. Ejecutalos desde la raíz del repositorio, con el token disponible en `ASSIST365_API_TOKEN` o ingresándolo cuando el CLI lo solicite.
+| Parte | Contenido |
+|---|---|
+| [Extracción](scripts/parte_01_extraccion/README.md) | Paginación, archivos y recuperación. |
+| [Carga raw](scripts/parte_02_carga_bigquery/README.md) | Preparación, carga y conciliación. |
+| [Modelo](scripts/parte_03_modelo_bigquery/README.md) | Staging, carga incremental y construcción gold. |
+| [Orquestación](scripts/parte_04_orquestacion/README.md) | Operación CLI y alcance del diseño cloud. |
+| [Análisis](scripts/parte_05_analisis/README.md) / [tablero](scripts/parte_06_tablero/README.md) | Queries, insights, fórmulas e interpretación. |
+| [Documentación](scripts/parte_07_readme/README.md) / [bonus](scripts/bonus/README.md) | Guía de lectura, uso de IA y pruebas de datos. |
 
-### 1. Primera extracción completa desde cero
-
-```bash
-RUN_ID="full-$(date -u +%Y%m%dT%H%M%SZ)"
-if [ -e ".local_data/assist365/raw/$RUN_ID" ]; then echo "El run_id ya existe; elegí otro."; exit 1; fi
-python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
-```
-
-Este ID nuevo permite empezar desde la primera página de cada recurso. Guardá su valor o la ruta de la corrida (`.local_data/assist365/raw/$RUN_ID`): lo vas a necesitar si hay que reanudar.
-
-### 2. Reanudar una extracción interrumpida
-
-Repetí el comando de la corrida interrumpida con **el mismo `--run-id`**:
-
-```bash
-RUN_ID="full-20260930T090000Z"  # Reemplazar por el ID de la corrida interrumpida.
-python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
-```
-
-El checkpoint está en `.local_data/assist365/raw/<run-id>/manifest.json`. La extracción retoma el cursor de pólizas y el offset de siniestros guardados allí; conserva las páginas ya descargadas y omite recursos que figuren completos. Si ese `run_id` ya terminó con éxito, volver a ejecutarlo no crea una captura nueva ni vuelve a descargar esos recursos.
-
-### 3. Captura diaria nueva
-
-Para ejecutar una corrida nueva al día siguiente, asignale un **`--run-id` nuevo** y usá `--full`:
-
-```bash
-RUN_ID="daily-$(date -u +%Y%m%dT%H%M%SZ)"
-if [ -e ".local_data/assist365/raw/$RUN_ID" ]; then echo "El run_id ya existe; elegí otro."; exit 1; fi
-python3 -m scripts.parte_01_extraccion.run --full --run-id "$RUN_ID" --min-interval-seconds 2 --max-retries 2
-python3 -m scripts.parte_02_carga_bigquery.prepare_local ".local_data/assist365/raw/$RUN_ID"
-```
-
-Esto crea un snapshot completo nuevo. **No es lo mismo que reanudar el checkpoint de ayer y hoy no es todavía una extracción delta**: el extractor actual no envía `updated_since` ni consume operaciones `I/U/D`, así que vuelve a pedir todos los datos disponibles (incluidas las 278 páginas actuales de siniestros). Para una nueva captura del mismo día, elegí otro ID único.
-
-La carga actual de BigQuery agrega los registros a raw con el `run_id`/`snapshot_id`; no aplica todavía ABM ni reemplaza el estado previo. `source_key` y `record_hash` quedan disponibles para comparar snapshots. El ABM debe implementarse después en staging/modelo: para pólizas, una vez que el extractor use el delta documentado por la API; para siniestros, comparando snapshots completos hasta que el proveedor ofrezca un filtro de cambios. Una ausencia de siniestro en un snapshot no se debe tratar automáticamente como baja.
-
-El comando sin opciones tiene valores por defecto distintos: una página por recurso, espera de 1 segundo y hasta 6 reintentos por solicitud. No lo uses para una extracción completa o diaria sin especificar las opciones anteriores.
+Se utilizó asistencia de IA para código, SQL y documentación, contrastados con ejecuciones, conciliaciones y pruebas. [Guía de documentación y uso de IA](scripts/parte_07_readme/README.md).

@@ -2,26 +2,26 @@
   {
     "name": "resource",
     "type": "STRING",
-    "description": "Nombre del recurso o endpoint de origen al que corresponde el dato, utilizado para separar flujos y aplicar controles específicos por entidad. En la tabla watermarks, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Recurso de la API al que pertenece el registro."
   },
   {
     "name": "watermark",
     "type": "TIMESTAMP",
-    "description": "Última fecha o posición de origen comprometida para incrementalidad de este recurso, tras completar controles de integridad exitosos. En la tabla watermarks, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Última marca de avance confirmada para el recurso."
   },
   {
     "name": "committed_at",
     "type": "TIMESTAMP",
-    "description": "Fecha y hora UTC en que se confirmó el watermark, permitiendo auditar cuándo avanzó el punto de lectura incremental. En la tabla watermarks, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Fecha UTC en que se confirmó el punto de avance."
   },
   {
     "name": "committed_run_id",
     "type": "STRING",
-    "description": "Identificador de la ejecución que confirmó el watermark, enlazando el avance con sus métricas y resultados de reconciliación. En la tabla watermarks, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Corrida que confirmó este punto de avance del recurso."
   },
   {
     "name": "overlap_seconds",
     "type": "INT64",
-    "description": "Segundos de solapamiento aplicados al consultar cambios previos al watermark para recuperar actualizaciones tardías o límites inclusivos. En la tabla watermarks, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Segundos de solapamiento usados en la lectura delta."
   }
 ]

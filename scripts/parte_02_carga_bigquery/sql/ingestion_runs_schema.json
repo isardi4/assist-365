@@ -2,51 +2,51 @@
   {
     "name": "run_id",
     "type": "STRING",
-    "description": "Identificador estable de la ejecución que obtuvo o procesó este dato, usado para enlazarlo con métricas, errores y controles de reconciliación. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Identificador de la corrida de extracción de origen."
   },
   {
     "name": "started_at",
     "type": "TIMESTAMP",
-    "description": "Marca temporal UTC del inicio de la ejecución, base para medir duración y asignar la partición temporal de esta fila de control. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Fecha UTC en que comenzó la corrida de extracción."
   },
   {
     "name": "finished_at",
     "type": "TIMESTAMP",
-    "description": "Marca temporal UTC del cierre de la ejecución; queda nula si el proceso no alcanzó un cierre normal y requiere investigación. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Fecha UTC en que terminó la corrida de extracción."
   },
   {
     "name": "run_status",
     "type": "STRING",
-    "description": "Resultado final normalizado de la ejecución, por ejemplo exitosa, parcial o fallida, derivado de controles explícitos y no solo del código de salida. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Resultado de extracción; no representa la carga remota."
   },
   {
     "name": "invocation_mode",
     "type": "STRING",
-    "description": "Modalidad que inició el proceso, como ejecución manual, programada o de recuperación, para interpretar su alcance operativo. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Modo de extracción usado: captura completa o acotada."
   },
   {
     "name": "source_watermark_before",
     "type": "TIMESTAMP",
-    "description": "Watermark confirmado antes de iniciar la corrida, registrado para reproducir el rango que se intentó consultar en la fuente. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Punto de avance confirmado antes de esta corrida."
   },
   {
     "name": "source_watermark_after",
     "type": "TIMESTAMP",
-    "description": "Watermark observado al terminar la lectura; solo debe comprometerse tras reconciliar y validar los datos extraídos. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Punto de avance observado al finalizar esta corrida."
   },
   {
     "name": "http_requests",
     "type": "INT64",
-    "description": "Cantidad total de solicitudes HTTP ejecutadas durante la corrida, incluyendo intentos que luego fueron reintentados. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Solicitudes HTTP contadas en la última invocación."
   },
   {
     "name": "http_retries",
     "type": "INT64",
-    "description": "Cantidad de reintentos HTTP realizados por errores transitorios o límites, indicador operativo para detectar inestabilidad de la API. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Reintentos HTTP contados en la última invocación."
   },
   {
     "name": "summary",
     "type": "JSON",
-    "description": "Resumen JSON de métricas y resultados de la corrida, destinado a guardar conteos y evidencia agregada sin sustituir el detalle de errores. En la tabla ingestion_runs, este campo aporta trazabilidad operativa y debe conservarse para auditoría, controles de calidad y análisis posteriores."
+    "description": "Resumen JSON de recursos y resultados de extracción."
   }
 ]

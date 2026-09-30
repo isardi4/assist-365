@@ -14,7 +14,8 @@ from scripts.shared.common import ExtractionError, emit
 
 PROJECT_ID = "a365-de-ignacio"
 DATASETS = {
-    "assist365_raw": "Immutable source data and ingestion controls",
+    "assist365_raw": "Source data, one table per API resource",
+    "assist365_control": "Operational ingestion, error and reconciliation controls",
     "assist365_staging": "Reserved for profiled intermediate models",
     "assist365_mart": "Reserved for validated analytical models",
 }
@@ -23,7 +24,11 @@ DDL_PATH = (
 )
 SCHEMA_DIR = DDL_PATH.parent
 TABLE_SCHEMAS = {
-    "records": "raw_records_schema.json",
+    "polizas": "raw_records_schema.json",
+    "siniestros": "raw_records_schema.json",
+    "agencias": "raw_records_schema.json",
+    "productos": "raw_records_schema.json",
+    "tipo_cambio": "raw_records_schema.json",
     "ingestion_runs": "ingestion_runs_schema.json",
     "ingestion_errors": "ingestion_errors_schema.json",
     "reconciliations": "reconciliations_schema.json",
@@ -103,10 +108,11 @@ def create_environment(location: str) -> None:
         # BigQuery limits rapid metadata updates; pace the six small schema patches.
         if index:
             time.sleep(2.2)
+        dataset = "assist365_raw" if table in {"polizas", "siniestros", "agencias", "productos", "tipo_cambio"} else "assist365_control"
         result = run_bq([
             "update", f"--description={descriptions[table]}",
             f"--schema={SCHEMA_DIR / schema_file}",
-            f"{PROJECT_ID}:assist365_raw.{table}",
+            f"{PROJECT_ID}:{dataset}.{table}",
         ], location)
         if result.returncode:
             raise ExtractionError(

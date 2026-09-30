@@ -1,9 +1,31 @@
-# Parte 1 — Extracción
+# Extracción de la API
 
-- `api/`: cliente HTTP, token, TLS y primitivas compartidas.
-- `extractor/`: paginación, checkpoints, raw local, manifiesto y ledger de errores.
-- `run.py`: punto de entrada. Sin opciones, usa una página por recurso, una espera mínima de 1 segundo y hasta 6 reintentos por solicitud; **no descarga todo el histórico**. Indicá siempre los límites y el `run_id` explícitamente.
+Descarga pólizas, siniestros, agencias, productos y tipos de cambio mediante paginación. Guarda respuestas gzip, checksums, manifiesto, checkpoints y errores bajo `.local_data/assist365/raw/<run-id>/`, fuera de Git.
 
-El README raíz contiene los comandos completos para iniciar una extracción total desde cero, reanudar un checkpoint interrumpido y crear un snapshot nuevo diario. Una corrida diaria requiere un `run_id` distinto; repetir el ID anterior reanuda esa corrida o no hace nada si ya estaba completa. El extractor actual toma snapshots completos: el modo incremental por `updated_since` aún no está implementado.
+## Uso y recuperación
 
-La extracción local `smoke-20260929` terminó en `SUCCESS`: 1.003.461 pólizas en 1.004 páginas, 138.962 siniestros en 278 páginas, 300 agencias, 12 productos y 5.124 tipos de cambio. Las 1.147.859 filas se conservaron sin cuarentena en archivos gzip, con manifiesto y ledger bajo `.local_data/assist365/raw/smoke-20260929/`. No se cargaron datos a BigQuery. Los errores transitorios previos quedaron resueltos al reanudar la corrida. El perfil de siniestros encontró variaciones bilingües y 414 valores no finitos en campos anidados; están documentados en el README raíz para tratarlos al definir staging.
+Desde la raíz del repositorio, con Python 3.10+. El extractor lee el token incluido en [config/assist365.json](../../config/assist365.json), por lo que un clon no necesita un archivo local adicional:
+
+```bash
+python3 -m scripts.parte_01_extraccion.run --full --run-id <nuevo-run-id>
+```
+
+`--full` solicita el snapshot completo. Sin esa opción, el valor predeterminado es **una página por recurso**, adecuado para una prueba acotada. El cliente espera al menos un segundo entre solicitudes y permite hasta seis reintentos por solicitud.
+
+Repetir un `run_id` reanuda sus checkpoints; una captura nueva requiere otro identificador. El extractor obtiene snapshots: no implementa delta por `updated_since`. La reconstrucción desde archivos existentes y el análisis en BigQuery no necesitan repetir la extracción.
+
+## Datos de referencia
+
+| Recurso | Registros descargados |
+|---|---:|
+| Pólizas | 1.003.461 |
+| Siniestros | 138.962 |
+| Agencias | 300 |
+| Productos | 12 |
+| Tipo de cambio | 5.124 |
+
+El snapshot `smoke-20260929` conserva **1.147.859 registros** y fue conciliado en [raw](../parte_02_carga_bigquery/README.md). Las variaciones de nombres y valores no finitos se preservan; su interpretación se resuelve en staging, según la [documentación de anomalías](../../README.md#anomalías-y-tratamiento).
+
+`api/` contiene el cliente HTTP y `extractor/` implementa paginación y persistencia. [Requisitos y reproducción](../../docs/EJECUCION.md).
+
+`ASSIST365_API_TOKEN` permite reemplazar el valor configurado y `ASSIST365_CONFIG_FILE` seleccionar otro JSON. El Markdown del ejercicio no se lee durante la ejecución. Este token solo autentica la API; BigQuery utiliza la identidad de Google Cloud CLI.

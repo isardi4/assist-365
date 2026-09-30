@@ -1,0 +1,187 @@
+[
+  {
+    "name": "date",
+    "type": "DATE",
+    "description": "Primer día del mes de emisión de la cohorte de pólizas."
+  },
+  {
+    "name": "year",
+    "type": "INT64",
+    "description": "Año calendario de la fecha comercial del agregado."
+  },
+  {
+    "name": "month",
+    "type": "INT64",
+    "description": "Mes calendario numérico de la fecha del agregado."
+  },
+  {
+    "name": "day",
+    "type": "INT64",
+    "description": "Día del mes correspondiente a la fecha del agregado."
+  },
+  {
+    "name": "year_month",
+    "type": "STRING",
+    "description": "Año y mes calendario en formato AAAA-MM del agregado."
+  },
+  {
+    "name": "year_quarter",
+    "type": "STRING",
+    "description": "Año y trimestre calendario en formato AAAA-Qn."
+  },
+  {
+    "name": "year_semester",
+    "type": "STRING",
+    "description": "Año y semestre calendario en formato AAAA-Sn."
+  },
+  {
+    "name": "day_of_week",
+    "type": "STRING",
+    "description": "Nombre en español del día semanal de la fecha UTC."
+  },
+  {
+    "name": "pais",
+    "type": "STRING",
+    "description": "País de emisión de la póliza; desconocido si falta."
+  },
+  {
+    "name": "producto",
+    "type": "STRING",
+    "description": "Nombre del plan comercial obtenido del catálogo vigente."
+  },
+  {
+    "name": "es_premium",
+    "type": "BOOL",
+    "description": "Indica producto premium; nulo si falta el catálogo."
+  },
+  {
+    "name": "canal_origen",
+    "type": "STRING",
+    "description": "Canal comercial de origen de la póliza asociada."
+  },
+  {
+    "name": "polizas",
+    "type": "INT64",
+    "description": "Pólizas no borradas ni anuladas por fecha de emisión."
+  },
+  {
+    "name": "polizas_con_prima_usd",
+    "type": "INT64",
+    "description": "Pólizas elegibles con prima y conversión USD válidas."
+  },
+  {
+    "name": "prima_usd",
+    "type": "NUMERIC",
+    "description": "Suma USD conocida de última prima de pólizas elegibles."
+  },
+  {
+    "name": "siniestros",
+    "type": "INT64",
+    "description": "Siniestros elegibles atribuidos a la cohorte de emisión."
+  },
+  {
+    "name": "siniestros_pagados",
+    "type": "INT64",
+    "description": "Cantidad de siniestros elegibles cuyo estado actual es PAGADO."
+  },
+  {
+    "name": "siniestros_rechazados",
+    "type": "INT64",
+    "description": "Cantidad de siniestros elegibles con estado actual RECHAZADO."
+  },
+  {
+    "name": "siniestros_en_analisis",
+    "type": "INT64",
+    "description": "Cantidad de siniestros elegibles con estado actual EN_ANALISIS."
+  },
+  {
+    "name": "siniestros_otros_estados",
+    "type": "INT64",
+    "description": "Cantidad de siniestros con estados distintos o nulos."
+  },
+  {
+    "name": "siniestros_pagados_con_costo_usd",
+    "type": "INT64",
+    "description": "Siniestros PAGADO con monto y conversión USD válidos."
+  },
+  {
+    "name": "costo_pagado_usd",
+    "type": "NUMERIC",
+    "description": "Suma USD conocida de montos de siniestros PAGADO."
+  },
+  {
+    "name": "siniestros_sin_poliza",
+    "type": "INT64",
+    "description": "Campo legado en cero; siniestros huérfanos fuera de gold."
+  },
+  {
+    "name": "siniestros_sin_periodo",
+    "type": "INT64",
+    "description": "Siniestros sin coincidencia única de cobertura."
+  },
+  {
+    "name": "siniestros_pagados_sin_periodo",
+    "type": "INT64",
+    "description": "Siniestros PAGADO sin coincidencia única de cobertura."
+  },
+  {
+    "name": "costo_pagado_sin_periodo_usd",
+    "type": "NUMERIC",
+    "description": "Costo USD conocido PAGADO sin período coincidente."
+  },
+  {
+    "name": "siniestros_poliza_anulada",
+    "type": "INT64",
+    "description": "Campo legado en cero; pólizas anuladas fuera de gold."
+  },
+  {
+    "name": "siniestros_poliza_borrada",
+    "type": "INT64",
+    "description": "Campo legado en cero; pólizas con baja D fuera de gold."
+  },
+  {
+    "name": "siniestros_pagados_con_periodo",
+    "type": "INT64",
+    "description": "Siniestros PAGADO cuya ocurrencia coincide con cobertura."
+  },
+  {
+    "name": "siniestros_pagados_con_periodo_con_costo_usd",
+    "type": "INT64",
+    "description": "PAGADO con cobertura coincidente y costo USD válido."
+  },
+  {
+    "name": "costo_pagado_con_periodo_usd",
+    "type": "NUMERIC",
+    "description": "Costo USD conocido PAGADO con cobertura coincidente."
+  },
+  {
+    "name": "siniestros_excluidos",
+    "type": "INT64",
+    "description": "Siniestros conservados fuera de los conteos analíticos."
+  },
+  {
+    "name": "siniestros_pagados_excluidos",
+    "type": "INT64",
+    "description": "Siniestros PAGADO excluidos de costo, frecuencia y severidad."
+  },
+  {
+    "name": "siniestros_moneda_inferida",
+    "type": "INT64",
+    "description": "Siniestros elegibles con moneda inferida de su póliza."
+  },
+  {
+    "name": "siniestros_pagados_moneda_inferida",
+    "type": "INT64",
+    "description": "Siniestros PAGADO elegibles con moneda de póliza inferida."
+  },
+  {
+    "name": "tipo_producto",
+    "type": "STRING",
+    "description": "Tipo del plan para comparar premium dentro de la misma categoría."
+  },
+  {
+    "name": "canal_agencia",
+    "type": "STRING",
+    "description": "Canal comercial del catálogo de la agencia de la póliza."
+  }
+]
