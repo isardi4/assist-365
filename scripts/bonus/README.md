@@ -18,58 +18,60 @@ Se entrega una [skill de análisis](../../SKILL.md) con glosario, tablas/granos,
 
 ## Qué prueban los archivos Python
 
-Los tres archivos contienen **20 pruebas**. Cada test construye un escenario conocido, ejecuta código del proyecto y compara el resultado con lo esperado. Una prueba también aprueba cuando el código rechaza correctamente un caso inválido, como un archivo corrupto. Si no obtiene el resultado esperado, el comando termina con error y el job del CI falla.
+Los tres archivos contienen **20 pruebas automáticas**. Cada una prepara una situación de ejemplo y comprueba que el programa responda como corresponde. Si algo funciona distinto de lo esperado, la prueba falla. También se prueba que el programa detenga operaciones incorrectas, como intentar cargar un archivo dañado.
 
-### Configuración: `test_api_token.py` — 7 pruebas
+Las pruebas usan datos inventados y simulan la API, el almacenamiento de Google Cloud (GCS) y BigQuery. No necesitan accesos a esos servicios ni modifican datos reales.
 
-Usa valores ficticios, variables de entorno aisladas y archivos temporales.
+### Lectura del token: `test_api_token.py` — 7 pruebas
 
-| Prueba | Escenario y resultado esperado |
-|---|---|
-| `test_environment_takes_precedence` | Token en el entorno y archivo inexistente: devuelve el token del entorno. |
-| `test_explicit_config` | Selecciona un JSON con `ASSIST365_CONFIG_FILE`: devuelve su token. |
-| `test_default_config` | Sin variables de entorno, usa la ruta predeterminada, sustituida por un archivo temporal. No valida el token real versionado. |
-| `test_missing_config_has_safe_error` | Archivo inexistente: devuelve un error de configuración comprensible. |
-| `test_invalid_json_does_not_expose_contents` | JSON incompleto: falla sin revelar el contenido sensible ficticio. |
-| `test_invalid_token_not_exposed` | Token con espacios: lo rechaza sin mostrar su valor en el error. |
-| `test_wrong_schema_and_empty_token_rejected` | Rechaza una lista, un objeto sin token, un token numérico y uno vacío. |
+El token es la clave que permite acceder a la API. Estas pruebas revisan cómo lo obtiene el programa, usando claves ficticias.
 
-Comprueba selección y validación de configuración; no verifica que la API acepte el token.
+| Función de prueba | Situación de ejemplo | Qué debe hacer el programa |
+|---|---|---|
+| `test_environment_takes_precedence` | Se configura un token directamente en el entorno de ejecución. | Usar ese token antes que el del archivo de configuración. |
+| `test_explicit_config` | Se indica un archivo de configuración específico. | Leer el token de ese archivo. |
+| `test_default_config` | No se indica ninguna configuración especial. | Buscar el token en el archivo predeterminado. La prueba usa un archivo temporal, no el token real del repositorio. |
+| `test_missing_config_has_safe_error` | El archivo de configuración no existe. | Detenerse con un mensaje que explique el problema. |
+| `test_invalid_json_does_not_expose_contents` | El archivo está mal escrito y no puede leerse como JSON. | Informar el error sin mostrar su contenido ni el token. |
+| `test_invalid_token_not_exposed` | El token contiene espacios y tiene un formato inválido. | Rechazarlo sin mostrar su valor en el mensaje. |
+| `test_wrong_schema_and_empty_token_rejected` | Falta el token, está vacío o tiene un tipo incorrecto, como un número. | Rechazar la configuración. |
 
-### Extracción: `test_extractor.py` — 2 pruebas
+Estas pruebas verifican la lectura del token; no comprueban que la API lo acepte.
 
-| Prueba | Escenario y resultado esperado |
-|---|---|
-| `test_full_cli_writes_gcs_and_complete_resume_does_not_call_api` | API y GCS simulados: captura tres catálogos, dos páginas de pólizas y dos de siniestros. Verifica `SUCCESS`, siete solicitudes, dos registros de pólizas, 501 siniestros, cursor y offsets `0`/`500`. Al repetir, conserva el manifiesto y no crea otro cliente API. |
-| `test_http_client_decodes_gzip_with_fixture_response` | Respuesta HTTP ficticia comprimida: devuelve el contenido original descomprimido y código `200`. |
+### Descarga de datos: `test_extractor.py` — 2 pruebas
 
-La primera prueba bloquea cualquier solicitud HTTP real: un intento de conexión hace fallar el test.
+| Función de prueba | Situación de ejemplo | Qué debe hacer el programa |
+|---|---|---|
+| `test_full_cli_writes_gcs_and_complete_resume_does_not_call_api` | La API entrega los datos en varias páginas y luego se repite la misma descarga ya terminada. | Recorrer las páginas correctamente y guardar el resultado. En el ejemplo recibe dos registros de pólizas y 501 siniestros. Al repetir, no vuelve a consultar la API ni cambia el registro de la descarga. |
+| `test_http_client_decodes_gzip_with_fixture_response` | La API entrega una respuesta comprimida para reducir su tamaño. | Descomprimirla y recuperar el contenido original. |
 
-### Almacenamiento y carga: `test_gcs_pipeline.py` — 11 pruebas
+La descarga de ejemplo usa siete respuestas simuladas. Cualquier intento de conexión HTTP real durante esa prueba hace que falle.
 
-`MemoryGCS` representa un bucket en memoria con objetos y generaciones; las llamadas a `bq` también se simulan. Permite probar recuperaciones y conflictos sin servicios externos.
+### Guardado y carga: `test_gcs_pipeline.py` — 11 pruebas
 
-| Prueba | Escenario y resultado esperado |
-|---|---|
-| `test_page_and_manifest_round_trip_without_local_directory` | Guarda y recupera página gzip y manifiesto: conserva contenido, conteo y ruta GCS. |
-| `test_pending_page_recovers_without_source_api_call` | Página guardada marcada como pendiente: la recupera sin llamar a la API. |
-| `test_prepare_reads_gcs_and_publishes_verified_gcs_files` | Prepara archivos desde raw: verifica URI GCS, contenido e integridad. Después corrompe un archivo y comprueba que sea rechazado. |
-| `test_stale_manifest_cannot_overwrite_a_newer_checkpoint` | Intenta escribir desde una versión antigua del manifiesto: rechaza sobrescribir la versión más reciente. |
-| `test_error_ledger_preserves_both_entries` | Agrega dos errores: conserva ambos y su orden. |
-| `test_bigquery_uses_gcs_uri_and_persists_receipt_in_gcs` | Carga simulada exitosa: el comando recibe la URI GCS y el recibo guardado identifica la tabla. |
-| `test_migrated_snapshot_is_not_loaded_again` | Lote marcado como migrado y conteos coincidentes: verifica destino sin invocar otra carga. |
-| `test_migration_confirmation_rejects_missing_destination_rows` | Lote marcado como migrado, pero sin filas esperadas en destino: falla por diferencia de conteos. |
-| `test_preparation_reuses_manifest_without_overwriting_receipts` | Repite preparación de un lote existente: mantiene la ruta y todos los objetos sin cambios. |
-| `test_preparation_rejects_changed_source_with_same_run_id` | Cambia la huella de una página de origen bajo el mismo `run_id`: rechaza la preparación y conserva los objetos existentes. |
-| `test_raw_verifier_publishes_gzip_report_without_an_error_ledger` | Captura sin archivo de errores y respuestas BigQuery simuladas: publica reporte `PASS` y archivo gzip con 29 conciliaciones. |
+Estas pruebas simulan archivos guardados en GCS y respuestas de BigQuery. Comprueban que el proceso pueda recuperarse y repetirse sin perder información.
 
-La última prueba verifica el funcionamiento del verificador y la publicación del reporte; no acredita 29 conciliaciones contra BigQuery real.
+| Función de prueba | Situación de ejemplo | Qué debe hacer el programa |
+|---|---|---|
+| `test_page_and_manifest_round_trip_without_local_directory` | Se guarda una página de datos y después se vuelve a leer. | Recuperar el mismo contenido y la información de avance de la descarga. |
+| `test_pending_page_recovers_without_source_api_call` | Una página ya se guardó, pero quedó marcada como pendiente. | Recuperarla de lo guardado, sin pedirla otra vez a la API. |
+| `test_prepare_reads_gcs_and_publishes_verified_gcs_files` | Se preparan los archivos para BigQuery y después se daña uno de ellos. | Prepararlos correctamente y detectar el archivo dañado antes de cargarlo. |
+| `test_stale_manifest_cannot_overwrite_a_newer_checkpoint` | Un proceso intenta guardar información de avance antigua cuando ya existe una versión más reciente. | Rechazar la escritura para no perder el avance nuevo. |
+| `test_error_ledger_preserves_both_entries` | Ocurren dos errores consecutivos. | Conservar ambos en el registro de errores, en su orden original. |
+| `test_bigquery_uses_gcs_uri_and_persists_receipt_in_gcs` | Se solicita cargar un archivo en BigQuery. | Indicar el archivo ubicado en GCS y guardar una constancia de carga que identifique la tabla. |
+| `test_migrated_snapshot_is_not_loaded_again` | Una descarga figura como ya cargada y las cantidades en destino coinciden. | Comprobar las cantidades y evitar volver a cargarla. |
+| `test_migration_confirmation_rejects_missing_destination_rows` | Una descarga figura como ya cargada, pero faltan registros en destino. | Detectar la diferencia y detenerse, en lugar de dar la carga por correcta. |
+| `test_preparation_reuses_manifest_without_overwriting_receipts` | Se repite la preparación de archivos de la misma descarga. | Reutilizar lo preparado sin sobrescribir los archivos ni las constancias existentes. |
+| `test_preparation_rejects_changed_source_with_same_run_id` | Cambia la información de origen, pero se conserva el mismo identificador de descarga (`run_id`). | Rechazar la preparación para no mezclar dos versiones bajo el mismo identificador. |
+| `test_raw_verifier_publishes_gzip_report_without_an_error_ledger` | La descarga no tuvo errores y se genera el informe de verificación. | Publicar igualmente el informe y sus 29 controles de comparación entre origen y destino. |
 
-Estas pruebas no descargan datos reales ni requieren credenciales Google, token API, paquetes externos o conexión a esos servicios. Verifican comportamientos controlados del código. La conectividad se comprueba con ensayos de ejecución; las transformaciones y resultados del warehouse, con validaciones SQL y conciliaciones reales.
+La última prueba usa respuestas inventadas de BigQuery: comprueba que se genere el informe, no que los 29 controles hayan pasado sobre las tablas reales.
+
+Para verificar conexión, transformaciones SQL y resultados reales se utilizan los ensayos del pipeline, las pruebas SQL y las comparaciones de cantidades descritas en la [guía de ejecución](../../docs/EJECUCION.md#validaciones).
 
 ## CI offline con GitHub Actions
 
-El [workflow](../../.github/workflows/ci-offline.yml) corre en cada push y pull request, y permite ejecución manual desde [Actions → CI offline](https://github.com/isardi4/assist-365/actions/workflows/ci-offline.yml) → **Run workflow**. En Ubuntu, con Python 3.10 y 3.13, valida el diff (espacios sobrantes y errores de whitespace), compila los scripts para detectar errores de sintaxis y ejecuta las veinte pruebas. No ejecuta el pipeline, consultas SQL ni llamadas a la API/GCS/BigQuery.
+El [workflow](../../.github/workflows/ci-offline.yml) corre en cada push y pull request, y permite ejecución manual desde [Actions → CI offline](https://github.com/isardi4/assist-365/actions/workflows/ci-offline.yml) → **Run workflow**. En Ubuntu, con Python 3.10 y 3.13, revisa problemas de espacios en los cambios, comprueba que los scripts Python estén escritos con sintaxis válida y ejecuta las veinte pruebas. No ejecuta el pipeline, consultas SQL ni llamadas a la API/GCS/BigQuery.
 
 Además de los tests, el workflow ejecuta dos controles independientes:
 
@@ -78,7 +80,7 @@ Además de los tests, el workflow ejecuta dos controles independientes:
 | `python -m compileall -q scripts` | Detecta errores de sintaxis Python, como un `:` faltante después de un `if`. No ejecuta el pipeline ni valida lógica SQL. |
 | `git diff --check` | Detecta problemas de espacios en los cambios, como espacios al final de una línea y marcadores de conflicto introducidos. No evalúa la lógica ni el formato SQL completo. |
 
-En Actions, abrir una ejecución y luego cada job para ver las pruebas y su resultado. Un job rojo indica un error que debe corregirse; un job verde confirma estos controles offline. Esto no configura una restricción de merge en GitHub.
+En Actions, abrir una ejecución y luego el bloque de Python 3.10 o 3.13 para ver las pruebas y su resultado. El color rojo indica un error que debe corregirse; el verde confirma que estos controles pasaron. El resultado informa el estado, pero no bloquea automáticamente la incorporación de cambios al repositorio.
 
 Para reproducir los controles desde la raíz, con Python 3.10 o superior:
 

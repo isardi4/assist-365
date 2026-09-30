@@ -410,3 +410,8 @@ Verificación local: 20 pruebas PASS, compileall y diff correctos. Commit eedc95
 ## Detalle de pruebas offline para entrega — 30/09/2026
 
 README de bonus ampliado con escenario y resultado esperado de las 20 pruebas (7 configuración, 2 extracción, 11 GCS/carga), identificadas por nombre del método. Aclara mocks, límites frente a conectividad y warehouse real, rechazo esperado de entradas inválidas y alcance de compileall/diff. Cambio solo documental; sin cambios en código, datos ni consultas API.
+
+
+## Redacción simple del bonus — 30/09/2026
+
+Reformulada la explicación de las 20 pruebas con situaciones de ejemplo y comportamiento esperado, sin detalles de mocks/generaciones; se conserva una columna con el nombre exacto de cada función de prueba para ubicarla en el código. Se conserva el alcance exacto y los límites de validación offline. Solo documentación.
