@@ -420,3 +420,8 @@ Reformulada la explicación de las 20 pruebas con situaciones de ejemplo y compo
 ## README de las siete partes con ejemplos — 30/09/2026
 
 Aplicado el formato archivo/función, situación de uso y comportamiento esperado a las siete partes. Parte 3 conserva cobertura de sus 20 SQL y archivos de apoyo, con separación entre cargas, consultas, pruebas y migraciones; añade ejemplo I→U→D sobre historial y estado actual. Partes 1/2 describen los archivos principales; Parte 4 explica cada llamada del pipeline; Partes 5/6/7 presentan consultas, recursos del dashboard y mapa documental con el mismo formato. Se mantienen comandos, resultados y límites de entrega. Cambios solo documentales, sin API ni alteraciones del modelo.
+
+
+## Anomalías explicadas con ejemplos — 30/09/2026
+
+README central reformula los ocho hallazgos como problema, ejemplo ficticio y tratamiento/fundamento. Aclara que los 829 son filas sobrantes (138.962→138.133), igualdad de campos de negocio tipados, conflicto dentro de lote bloqueado y cambio entre capturas permitido por MERGE. Conserva cifras, reglas de inclusión, FX contractual y límites; solo documentación, sin consultas API ni cambios de datos.

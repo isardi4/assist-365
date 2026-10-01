@@ -121,18 +121,22 @@ Las fechas de FX y las exclusiones se fundamentan en [decisiones del modelo](#de
 
 ## Anomalías y tratamiento
 
-Cantidades de staging completo al corte de referencia; las categorías pueden superponerse.
+Cantidades del snapshot de referencia, antes de las exclusiones finales de gold. Un mismo registro puede tener más de un problema. **Los ejemplos son ficticios** y muestran cómo se aplica cada regla.
 
-| Hallazgo | Decisión y fundamento |
-|---|---|
-| **411 monedas nulas** | Inferir desde la única moneda histórica de la póliza y marcar `INFERIDA_POLIZA`. En 137.170 pares comparables las monedas coinciden. La fuente permanece nula; 410 inferidos son monetariamente válidos y uno también es negativo. |
-| **824 montos negativos** | Excluir de costo y conteos: no hay evidencia de reversa/reintegro ni un positivo equivalente en la misma póliza y moneda. No usar valor absoluto ni reemplazar por cero. |
-| **829 duplicados exactos** | Deduplicar a un siniestro; un conflicto de contenido bloquea la carga. |
-| **1.242 eventos fuera de vigencia** | Marcar `FUERA_PERIODO`: ocurren 1–58 días después del fin. No cambiar el estado comercial ni excluirlos automáticamente si el importe es válido. |
-| **552 referencias sin póliza** | Marcar `POLIZA_AUSENTE`, sin inventar entidades o fechas. Fuera de gold. |
-| **4.145 ocurrencias futuras** | Conservar la fecha original y excluir eventos posteriores al corte 29/09/2026 del costo observado. |
-| **438 eventos de última ANULADA y 3.473 de última D** | Excluir la póliza completa y sus eventos de este análisis; conservarlos para auditoría e historia. |
-| **3.703 cotizaciones con diferencias entre sus dos campos, de 5.124** | El producto `factor_usd × unidades_por_usd` difiere de 1 más de 0,000001. La API indica convertir con `monto × factor_usd`: se aplica esa regla y se informa la diferencia, sin sustituir la tasa por `1 / unidades_por_usd`. |
+| Hallazgo | Cuál es el problema | Ejemplo | Qué hacemos y por qué |
+|---|---|---|---|
+| **411 siniestros sin moneda** | No se puede convertir un importe a USD sin conocer su moneda. | Un siniestro informa 1.000 sin moneda; su póliza solo registra ARS en todo el historial. | Usamos la moneda de la póliza cuando su historial permite identificar una sola, y marcamos `INFERIDA_POLIZA`. Conservamos el original sin moneda. De los 411, 410 tienen importe válido y uno es negativo: los inferidos válidos se incluyen. |
+| **824 montos negativos** | No sabemos si representan una devolución, una corrección o un error; sumarlos reduciría el costo sin explicación. | Un siniestro informa −100 USD, pero no hay información que permita tratarlo como devolución. | Los marcamos y excluimos de importes y conteos de análisis hasta aclararlos. No cambiamos el signo ni los reemplazamos por cero. No se encontró un positivo equivalente en la misma póliza y moneda que permita explicar la reversa. |
+| **829 filas repetidas de siniestros** | El mismo siniestro aparece más de una vez con los mismos datos de negocio. Contarlo por fila inflaría cantidades y costos. | El ID S001 aparece dos veces, ambas con estado PAGADO e importe 100 USD. Representa un evento de 100 USD, no dos de 200 USD. | Raw conserva ambas filas; staging deja una sola. Los 138.962 registros de origen quedan en 138.133 siniestros. Si un mismo ID trae datos distintos dentro del mismo lote, se detiene la carga: no se elige una versión arbitrariamente. |
+| **1.242 siniestros fuera de vigencia** | La fecha del evento queda después del fin de cobertura, entre 1 y 58 días. | La cobertura termina el 10 de febrero y el siniestro ocurre el 15. | Marcamos `FUERA_PERIODO` sin cambiar su estado comercial. No se excluye automáticamente de los cálculos si el importe es válido; el indicador permite analizar por separado los casos con cobertura coincidente. |
+| **552 siniestros sin póliza asociada** | No se encuentra su póliza para relacionar el costo con una prima o una cobertura. | El siniestro menciona P999, pero esa póliza no está disponible. | Marcamos `POLIZA_AUSENTE`, conservamos el caso y lo dejamos fuera de gold. No inventamos una póliza ni fechas de cobertura. |
+| **4.145 siniestros con fecha posterior al corte** | Corresponden a fechas posteriores al período observado por esta entrega. | El corte es 29/09/2026 y un evento tiene fecha 05/10/2026. | Conservamos la fecha original, pero no lo incluimos en los cálculos hasta ese corte. No corregimos la fecha suponiendo que sea un error. |
+| **438 siniestros de pólizas ANULADA y 3.473 de pólizas con última operación D** | Sus pólizas están anuladas o borradas en el último estado disponible. Usar una versión anterior las incluiría nuevamente. | Una póliza tiene un alta I y después una baja D; usar solo el alta haría aparecer una póliza que ya fue borrada. | Excluimos la póliza completa y sus siniestros de este análisis. Conservamos el historial para otros análisis que necesiten estudiar bajas o anulaciones. |
+| **3.703 cotizaciones con campos inconsistentes, de 5.124** | Los dos campos que expresan la conversión no coinciden matemáticamente. | Si `factor_usd = 0,5` y `unidades_por_usd = 3`, 100 unidades darían 50 USD con el primero y 33,33 USD al invertir el segundo. | Aplicamos la regla explícita de la API: `monto × factor_usd`. Informamos la diferencia y no sustituimos la tasa por otra sin evidencia. El control detecta cuando `factor_usd × unidades_por_usd` difiere de 1 más de 0,000001. |
+
+Para inferir moneda se revisó también que coincidiera entre póliza y siniestro en **137.170 pares con ambas monedas informadas**. Esto respalda la regla, aunque no reemplaza la confirmación de la fuente.
+
+**Repetición y actualización son casos distintos.** En siniestros, la comparación se hace sobre los campos de negocio interpretados en staging, no sobre los metadatos de carga. Dos filas iguales del mismo ID se reducen a una. Dos filas diferentes del mismo ID dentro de un lote bloquean la carga porque falta un criterio fiable para ordenarlas. Si una captura nueva trae un único estado distinto para ese ID, el MERGE puede actualizar el registro existente.
 
 Los flags separan cobertura de validez monetaria. `excluir_calculos` retira también importes nulos, moneda irrecuperable o falta de cotización válida. **Una moneda inferida válida se incluye**. Para analizar solo cobertura coincidente, gold ofrece `*_con_periodo`; se conservan prima y pólizas como denominadores.
 
