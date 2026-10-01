@@ -32,9 +32,19 @@ La verificación remota compara registros, páginas, posiciones y controles del 
 
 El snapshot `smoke-20260929` cargó **1.147.859 registros** y pasó **29 controles remotos**. SQL, recibos e informes se conservan junto al manifiesto, fuera de Git. La carga usa URI `gs://` directamente y no consulta la API. El bucket es `gs://a365-de-ignacio-assist365-data`: páginas en `raw/` y archivos preparados en `bigquery-load/`. Los temporales de compresión se eliminan tras publicarlos.
 
-- `create_datasets.py`: crea datasets y tablas mediante `create_environment.py`.
-- `prepare_load.py`: preparación; `load_local.py` / `load_bigquery.py`: carga; `verify_raw.py`: conciliación.
-- `sql/`: DDL y esquemas. `003_split_raw_resources.sql` es una migración histórica ya aplicada, fuera del flujo de reconstrucción.
+### Qué hace cada archivo
+
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [create_datasets.py](create_datasets.py) / [create_environment.py](create_environment.py) | Se prepara el entorno por primera vez. | Crea o reutiliza los datasets y las tablas raw/control, y aplica sus esquemas y descripciones. |
+| [prepare_load.py](prepare_load.py) | La descarga terminó y hay páginas guardadas en GCS. | Comprueba que estén completas e íntegras y genera los archivos de carga y el listado que los describe. |
+| [load_bigquery.py](load_bigquery.py) | Los archivos preparados están listos para subir a raw. | Valida los archivos, solicita su carga desde GCS y guarda las constancias de los jobs de BigQuery. |
+| [verify_raw.py](verify_raw.py) | La carga terminó y se quiere comprobar que no falten registros. | Compara cantidades y páginas del lote con BigQuery y publica el informe de sus 29 controles. |
+| [prepare_local.py](prepare_local.py) / [load_local.py](load_local.py) | Se encuentra uno de estos nombres en una ejecución anterior. | Son entradas alternativas a la misma preparación/carga; su nombre no implica que los datos deban estar en el equipo local. |
+| [migrate_to_gcs.py](migrate_to_gcs.py) | Existe una descarga antigua guardada en el equipo local. | Copia y verifica sus archivos en GCS, y actualiza las rutas conservando las constancias de carga. No se necesita para descargas nuevas. |
+| [001_raw_and_control_tables.sql](sql/001_raw_and_control_tables.sql) | El creador del entorno necesita las tablas iniciales. | Define las tablas raw por recurso y las tablas de control. |
+| [002_table_descriptions.sql](sql/002_table_descriptions.sql) y [esquemas JSON](sql/) | Se necesita consultar o aplicar las descripciones de tablas y campos. | Contienen las definiciones de estructura y documentación; el creador del entorno aplica los esquemas JSON y descripciones. |
+| [003_split_raw_resources.sql](sql/003_split_raw_resources.sql) | Se migra el antiguo modelo con todos los recursos juntos. | Separa los recursos en tablas raw individuales. Es una migración ya aplicada, fuera del flujo habitual. |
 
 `migrate_to_gcs.py <raw-local> <preparado-local>` permite copiar un snapshot existente, verificar tamaño/MD5 y actualizar solo sus rutas, conservando checksums y recibos. La migración de referencia verificó 1.316 archivos, además de los dos manifiestos. Una carga de prueba de los cinco recursos desde GCS reprodujo exactamente los 1.147.859 registros de raw; las tablas de prueba se eliminaron y no se agregaron filas a producción.
 

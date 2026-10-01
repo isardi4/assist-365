@@ -2,6 +2,20 @@
 
 El flujo entregado se ejecuta con `python3 -m scripts.run_pipeline --run-id smoke-20260929 --fecha-corte 2026-09-29`: **archivos verificados → raw → staging → gold**. Conserva controles y evidencias por corrida y se detiene ante el primer error; `--setup` crea/reutiliza el entorno. Los [comandos de ejecución](../../docs/EJECUCION.md) permiten reconstruirlo desde un snapshot disponible; los análisis consumen BigQuery sin consultar la API.
 
+## Qué ejecuta el comando
+
+El archivo [scripts/run_pipeline.py](../run_pipeline.py), función `run`, coordina estos pasos en orden. Parte de una descarga ya disponible en GCS; no llama a la API.
+
+| Archivo o función | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| `create_environment` de [create_environment.py](../parte_02_carga_bigquery/create_environment.py) | Se ejecuta con `--setup` para preparar el entorno. | Crea o reutiliza datasets y tablas raw/control. |
+| `prepare_run` de [prepare_load.py](../parte_02_carga_bigquery/prepare_load.py) | Hay una descarga terminada que debe pasar a BigQuery. | Verifica sus páginas y prepara los archivos de carga. |
+| `load_run` de [load_bigquery.py](../parte_02_carga_bigquery/load_bigquery.py) | Los archivos de carga están preparados. | Carga raw o reutiliza cargas ya confirmadas cuando corresponde. |
+| `verify_raw` de [verify_raw.py](../parte_02_carga_bigquery/verify_raw.py) | Se terminó de cargar raw. | Compara el lote de origen con el destino antes de continuar. |
+| `apply` de [apply_staging.py](../parte_03_modelo_bigquery/apply_staging.py) | Raw pasó la verificación. | Aplica las altas, cambios y bajas a staging, y recalcula los flags de calidad. |
+| `apply` de [apply_gold.py](../parte_03_modelo_bigquery/gold/apply_gold.py) | Staging está actualizado. | Reconstruye y publica la tabla que consume el dashboard. |
+| `run` de [run_pipeline.py](../run_pipeline.py) | Una etapa termina o falla. | Registra el resultado y guarda el informe final en GCS. Si hay un error, detiene las etapas siguientes. |
+
 ## Repetición y recuperación
 
 | Etapa | Comportamiento |

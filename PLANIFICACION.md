@@ -415,3 +415,8 @@ README de bonus ampliado con escenario y resultado esperado de las 20 pruebas (7
 ## Redacción simple del bonus — 30/09/2026
 
 Reformulada la explicación de las 20 pruebas con situaciones de ejemplo y comportamiento esperado, sin detalles de mocks/generaciones; se conserva una columna con el nombre exacto de cada función de prueba para ubicarla en el código. Se conserva el alcance exacto y los límites de validación offline. Solo documentación.
+
+
+## README de las siete partes con ejemplos — 30/09/2026
+
+Aplicado el formato archivo/función, situación de uso y comportamiento esperado a las siete partes. Parte 3 conserva cobertura de sus 20 SQL y archivos de apoyo, con separación entre cargas, consultas, pruebas y migraciones; añade ejemplo I→U→D sobre historial y estado actual. Partes 1/2 describen los archivos principales; Parte 4 explica cada llamada del pipeline; Partes 5/6/7 presentan consultas, recursos del dashboard y mapa documental con el mismo formato. Se mantienen comandos, resultados y límites de entrega. Cambios solo documentales, sin API ni alteraciones del modelo.

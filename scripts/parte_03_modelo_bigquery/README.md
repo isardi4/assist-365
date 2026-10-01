@@ -13,6 +13,8 @@
 
 ## Resolución de cambios
 
+Ejemplo: una póliza ingresa con operación I y luego recibe una U con una prima distinta. `polizas` conserva ambos eventos; `polizas_activas` muestra el último estado y su nueva prima. Si después llega una D, se conserva el historial y se retira la póliza de `polizas_activas`.
+
 La última U actualiza I según `updated_at`; la última D retira la póliza del estado actual. Un evento tardío no revierte un estado posterior. `polizas` conserva el historial; `polizas_activas` significa **no borradas**, por lo que incluye estados ANULADA y VENCIDA. Gold excluye la última ANULADA.
 
 Las 183.461 U mantienen la vigencia anterior y 50.408 cambian prima o moneda. No se agrega una tabla de versiones por cobertura porque esta captura tiene un solo período por póliza. El historial permite revisar cambios, pero las fechas de cobertura no reconstruyen los atributos conocidos en cada instante. [Diagnóstico de vigencias](policy_period_diagnostic.md).
@@ -60,55 +62,55 @@ Reconstruye el agregado mensual completo y confirma datos/control en una transac
 
 ## Scripts SQL
 
-Los ejecutores seleccionan y ordenan los SQL de construcción. Las consultas diagnósticas y las pruebas se ejecutan por separado.
+Los comandos Python ejecutan los SQL de construcción en el orden necesario. No hace falta lanzarlos uno por uno. Las consultas de diagnóstico y las pruebas se ejecutan por separado; las tablas siguientes distinguen ambos usos.
 
 ### Staging
 
-| Archivo | Función |
-|---|---|
-| [010_silver_tables.sql](sql/010_silver_tables.sql) | Crea tablas físicas staging y controles si no existen. |
-| [011_incremental_silver.sql](sql/011_incremental_silver.sql) | Lee el lote raw, tipa JSON, aplica MERGE y confirma datos/control. |
-| [012_incremental_tests.sql](sql/012_incremental_tests.sql) | Prueba cambios I/U/D, repetición y rollback con tablas temporales. |
-| [013_silver_status.sql](sql/013_silver_status.sql) | Consulta ejecuciones, conciliaciones y filas modificadas. |
-| [014_utc_boundary_test.sql](sql/014_utc_boundary_test.sql) | Comprueba fechas UTC con casos temporales de borde. |
-| [015_policy_period_diagnostic.sql](sql/015_policy_period_diagnostic.sql) | Revisa vigencias y coincidencia de cobertura; no modifica negocio. |
-| [016_claim_business_flags.sql](sql/016_claim_business_flags.sql) | Referencia de los flags incluidos en 011; no es un cargador separado. |
-| [020_retire_legacy_staging.sql](sql/020_retire_legacy_staging.sql) | Migración de retirada de vistas/tablas heredadas; fuera del flujo habitual. |
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [010_silver_tables.sql](sql/010_silver_tables.sql) | Se prepara staging por primera vez. | Crea las tablas de datos y sus tablas de control si todavía no existen; no carga registros. |
+| [011_incremental_silver.sql](sql/011_incremental_silver.sql) | Llega un lote raw con pólizas nuevas, actualizadas o borradas. | Lee sus JSON, convierte los campos a sus tipos y aplica altas, cambios y bajas. Conserva el historial y actualiza el estado actual; registra los controles junto con los datos. |
+| [012_incremental_tests.sql](sql/012_incremental_tests.sql) | Se quiere comprobar que una actualización o una repetición funcionen correctamente. | Prueba altas, cambios, bajas, llegada tardía y recuperación ante fallas con tablas temporales; no modifica las tablas de negocio. |
+| [013_silver_status.sql](sql/013_silver_status.sql) | Se necesita saber cómo terminó una carga staging. | Muestra ejecuciones, resultados de los controles y cantidades modificadas. |
+| [014_utc_boundary_test.sql](sql/014_utc_boundary_test.sql) | Una fecha cerca de medianoche podría quedar asignada a otro día. | Comprueba cómo se interpretan las fechas UTC con ejemplos temporales. |
+| [015_policy_period_diagnostic.sql](sql/015_policy_period_diagnostic.sql) | Se quiere saber si una actualización cambia la vigencia o si un siniestro queda dentro de cobertura. | Consulta esos casos y sus cantidades; no modifica los datos de negocio. |
+| [016_claim_business_flags.sql](sql/016_claim_business_flags.sql) | Se necesita entender cómo se marca un importe negativo o una moneda inferida. | Documenta las reglas de clasificación incluidas en 011. No se ejecuta como una carga adicional. |
+| [020_retire_legacy_staging.sql](sql/020_retire_legacy_staging.sql) | Se migra una instalación que conserva tablas o vistas del modelo anterior. | Retira esos objetos antiguos. No forma parte de la corrida habitual. |
 
 ### Gold
 
-| Archivo | Función |
-|---|---|
-| [000_control.sql](gold/sql/000_control.sql) | Crea el control gold y registra el inicio del intento. |
-| [001_dashboard_table.sql](gold/sql/001_dashboard_table.sql) | Define esquema, partición y clustering del mart mensual. |
-| [002_build_dashboard.sql](gold/sql/002_build_dashboard.sql) | Construye el candidato por cohorte, convierte a USD y concilia. |
-| [003_publish_dashboard.sql](gold/sql/003_publish_dashboard.sql) | Reemplaza gold y confirma el control en una transacción. |
-| [004_country_ranking.sql](gold/sql/004_country_ranking.sql) | Consulta indicadores y siniestralidad por país desde gold. |
-| [005_premium_comparison.sql](gold/sql/005_premium_comparison.sql) | Compara premium/no premium por tipo de producto desde gold. |
-| [006_functional_tests.sql](gold/sql/006_functional_tests.sql) | Ejecuta 21 pruebas de reglas gold sobre tablas temporales. |
-| [007_dashboard_consumption.sql](gold/sql/007_dashboard_consumption.sql) | Ejemplos de consultas de país y premium con filtro temporal; no mide los jobs reales de Looker. |
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [000_control.sql](gold/sql/000_control.sql) | Comienza un intento de construcción gold. | Crea las tablas de control necesarias y registra el inicio del intento. |
+| [001_dashboard_table.sql](gold/sql/001_dashboard_table.sql) | Se necesita preparar la tabla que consulta Looker. | Define sus columnas y su organización por fechas y campos de consulta. |
+| [002_build_dashboard.sql](gold/sql/002_build_dashboard.sql) | Se quiere calcular los indicadores después de actualizar staging. | Prepara el resultado mensual por mes de emisión, convierte importes a USD y comprueba su consistencia antes de publicarlo. |
+| [003_publish_dashboard.sql](gold/sql/003_publish_dashboard.sql) | El resultado preparado pasó los controles. | Reemplaza el contenido de gold y confirma el estado de la carga en una misma operación; si falla antes de confirmar, conserva lo publicado. |
+| [004_country_ranking.sql](gold/sql/004_country_ranking.sql) | Se quiere comparar la siniestralidad entre países. | Consulta los indicadores por país desde gold; no modifica tablas. |
+| [005_premium_comparison.sql](gold/sql/005_premium_comparison.sql) | Se quiere comparar planes premium y no premium. | Consulta sus indicadores por tipo de producto desde gold; no modifica tablas. |
+| [006_functional_tests.sql](gold/sql/006_functional_tests.sql) | Se quiere comprobar que gold aplique las reglas de población y cálculo. | Ejecuta 21 pruebas con tablas temporales, incluida la suma de cada prima una sola vez. |
+| [007_dashboard_consumption.sql](gold/sql/007_dashboard_consumption.sql) | Se necesita un ejemplo de consulta de gold con un período acotado. | Consulta indicadores de país y premium. No mide el consumo real del dashboard; esa medición está en la Parte 6. |
 
 `apply_gold.py` ejecuta **000 → 002 → 001 → 003**: registra el intento, construye/valida el candidato, asegura el destino y publica. Los SQL 004–007 no forman parte de esa ejecución. La medición real del conector está en la Parte 6.
 
 ### Auditoría de siniestros
 
-| Archivo | Función |
-|---|---|
-| [diagnose.sql](claims_audit/diagnose.sql) | Consulta anomalías de cobertura, importes y moneda. |
-| [currency_recovery.sql](claims_audit/currency_recovery.sql) | Evalúa inferencia de moneda y disponibilidad de FX; no imputa datos. |
-| [register_reviews.sql](claims_audit/register_reviews.sql) | Registra motivos y estado de revisión en control; ejecución manual. |
-| [flag_tests.sql](claims_audit/flag_tests.sql) | Prueba ocho casos de flags con tablas temporales. |
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [diagnose.sql](claims_audit/diagnose.sql) | Hay siniestros con cobertura, importe o moneda dudosos. | Consulta las anomalías para identificar y contar los casos. |
+| [currency_recovery.sql](claims_audit/currency_recovery.sql) | Un siniestro no informa moneda y podría obtenerse de su póliza. | Evalúa esa posibilidad y la disponibilidad de una cotización; no modifica ni completa datos. |
+| [register_reviews.sql](claims_audit/register_reviews.sql) | Se necesita dejar constancia de casos pendientes de revisión. | Registra motivos y estado de revisión en el dataset de control. Se ejecuta manualmente. |
+| [flag_tests.sql](claims_audit/flag_tests.sql) | Se quiere verificar qué casos quedan incluidos o excluidos de los cálculos. | Prueba ocho ejemplos de moneda inferida e importes inválidos con tablas temporales. |
 
 ## Ejecutores y archivos de apoyo
 
-| Archivo | Función |
-|---|---|
-| [apply_staging.py](apply_staging.py) | Valida el manifiesto, ejecuta 010/011 y guarda evidencia silver. |
-| [gold/apply_gold.py](gold/apply_gold.py) | Ejecuta la construcción/publicación y registra tamaño real y evidencia gold. |
-| [profile_local.py](profile_local.py) | Perfila una captura raw de GCS o una ruta local explícita; no carga staging. |
-| [claims_audit/profile_raw.py](claims_audit/profile_raw.py) | Revisa siniestros preparados en GCS y publica informes diagnósticos. |
-| [silver_schema.json](silver_schema.json) / [field_descriptions.json](field_descriptions.json) | Esquema esperado de staging y descripciones de sus campos. |
-| [gold/schema.json](gold/schema.json) | Esquema y descripciones aplicados al mart. |
-| [policy_period_diagnostic.md](policy_period_diagnostic.md) | Resultados del diagnóstico de vigencias y decisión de modelado. |
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [apply_staging.py](apply_staging.py), función `apply` | Raw ya está cargado y se quiere actualizar staging. | Valida el manifiesto —el archivo que describe el lote—, ejecuta 010 y 011 y guarda los resultados de la carga. |
+| [gold/apply_gold.py](gold/apply_gold.py), función `apply` | Staging ya está actualizado y se quiere renovar el dashboard. | Coordina la construcción y publicación de gold; registra el tamaño real de la tabla y los resultados. |
+| [profile_local.py](profile_local.py) | Se necesita explorar qué contienen los archivos raw. | Resume una captura de GCS o una ruta local indicada explícitamente; no carga staging. |
+| [claims_audit/profile_raw.py](claims_audit/profile_raw.py) | Se quiere revisar los siniestros antes de interpretar sus anomalías. | Lee los archivos preparados en GCS y publica informes de diagnóstico. |
+| [silver_schema.json](silver_schema.json) / [field_descriptions.json](field_descriptions.json) | Se necesita consultar las columnas y descripciones esperadas de staging. | Define el esquema de referencia y las explicaciones de sus campos. |
+| [gold/schema.json](gold/schema.json) | Se necesita consultar las columnas de la tabla del dashboard. | Define el esquema y las descripciones aplicados al mart. |
+| [policy_period_diagnostic.md](policy_period_diagnostic.md) | Se quiere entender por qué no se agregó una tabla de versiones por cobertura. | Explica los resultados del diagnóstico de vigencias y la decisión de modelado. |
 
 Las [pruebas del bonus](../bonus/README.md) y la [guía de ejecución](../../docs/EJECUCION.md) incluyen requisitos y comandos para validar el modelo.

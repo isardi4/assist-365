@@ -8,6 +8,15 @@ El tablero permite comparar países y planes por siniestralidad y analizar si la
 
 Vista del tablero para **abril–junio de 2026**. Abrir el enlace para cambiar el período o aplicar filtros; la imagen es una referencia estática.
 
+## Archivos y uso
+
+| Archivo o recurso | Situación de ejemplo | Qué permite hacer |
+|---|---|---|
+| [Dashboard](https://datastudio.google.com/reporting/be1247ad-58d9-4ed1-ba70-ca4830505fb3/page/0eCAG) | Se quieren comparar países, planes o canales. | Consultar indicadores con gráficos y filtros, leyendo la tabla gold. |
+| [dashboard-preview.png](assets/dashboard-preview.png) | Se revisa la entrega sin abrir Looker. | Ver una captura de referencia para abril–junio de 2026; no cambia con los filtros. |
+| [001_medir_consumo.sql](sql/001_medir_consumo.sql) | Se abrió el dashboard y se quiere saber cuántos datos leyeron sus consultas. | Consultar los jobs identificados como Looker dentro de una ventana de tiempo y sumar sus bytes procesados. |
+| [consumo_20260930.json](evidence/consumo_20260930.json) | Se quiere revisar cómo se obtuvo la medición entregada. | Consultar las ventanas, consultas, IDs de jobs y resultados registrados; es evidencia guardada, no una nueva medición. |
+
 ## Período y filtros
 
 La fecha `date` es el primer día del mes de emisión de las pólizas. Seleccionar una cohorte incluye su prima y sus siniestros elegibles posteriores, acumulados hasta el corte de ocurrencia **29/09/2026**. No representa pagos realizados durante el trimestre seleccionado.

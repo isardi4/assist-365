@@ -2,10 +2,10 @@
 
 Dos queries de BigQuery devuelven resultados mensuales directamente desde staging:
 
-| Query | Agrupación |
-|---|---|
-| [Siniestralidad por país y plan](sql/001_siniestralidad_pais_plan.sql) | Mes de emisión de la póliza, país y nombre del plan. |
-| [Siniestralidad por canal y país](sql/002_siniestralidad_canal_pais.sql) | Mes de emisión de la póliza, país y canal de agencia. |
+| Archivo | Situación de ejemplo | Qué devuelve |
+|---|---|---|
+| [001_siniestralidad_pais_plan.sql](sql/001_siniestralidad_pais_plan.sql) | Se quiere identificar qué país o plan tiene mayor costo pagado respecto de su prima. | Una fila por mes de emisión, país y plan, con cantidades, importes USD, siniestralidad, frecuencia y severidad. |
+| [002_siniestralidad_canal_pais.sql](sql/002_siniestralidad_canal_pais.sql) | Se quiere comparar ONLINE y CALL_CENTER dentro de un país. | Una fila por mes de emisión, país y canal de agencia, con los mismos indicadores y cantidades de pólizas y siniestros. |
 
 ## Definición de cohorte
 

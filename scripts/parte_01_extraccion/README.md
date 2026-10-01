@@ -14,6 +14,19 @@ python3 -m scripts.parte_01_extraccion.run --full --run-id <nuevo-run-id>
 
 Repetir un `run_id` completo verifica su checkpoint y termina sin llamadas ni cambios al manifiesto. Si está incompleto, reanuda sus checkpoints; una captura nueva requiere otro identificador. El extractor obtiene snapshots: no implementa delta por `updated_since`. La reconstrucción desde archivos existentes y el análisis en BigQuery no necesitan repetir la extracción.
 
+## Archivos principales
+
+La API entrega algunos recursos en varias páginas. El extractor las recorre y guarda tanto las respuestas como su avance, para poder continuar si se interrumpe.
+
+| Archivo | Cuándo se usa: ejemplo | Qué hace |
+|---|---|---|
+| [run.py](run.py) | Se quiere iniciar o reanudar una descarga. | Es la entrada del comando; delega la ejecución al extractor. |
+| [extractor/cli.py](extractor/cli.py) | Se ejecuta el comando con un `run_id` y una ruta de destino. | Lee las opciones, revisa el avance guardado y coordina los recursos a descargar. |
+| [api/common.py](api/common.py), función `read_token` | El extractor necesita la clave de acceso a la API. | Obtiene y valida el token de la configuración o del entorno. |
+| [api/client.py](api/client.py) | Se solicita una página o la API responde con un error transitorio. | Envía solicitudes, respeta la espera entre llamadas, reintenta y descomprime respuestas cuando corresponde. |
+| [extractor/extractors.py](extractor/extractors.py), funciones `extract_catalog`, `extract_policies` y `extract_claims` | Una respuesta indica que quedan más pólizas o siniestros. | Recorre catálogos y páginas hasta el límite solicitado o hasta completar el recurso. |
+| [extractor/storage.py](extractor/storage.py) | Se recibe una página o se retoma una descarga interrumpida. | Guarda respuestas comprimidas, cantidades, errores y avance; permite recuperar páginas ya guardadas. |
+
 ## Datos de referencia
 
 | Recurso | Registros descargados |
